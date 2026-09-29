@@ -6,6 +6,14 @@
 
 Keep the high-risk logic—facts, versions, entitlements, and document output—small, deterministic, and independently testable. Apple frameworks sit behind adapters. SwiftUI coordinates flows but owns no business rules.
 
+## Required UI foundation
+
+The presentation baseline is [`lrodeveloperr/ios-18-shell`](https://github.com/lrodeveloperr/ios-18-shell). Do not design or build a second generic shell in this repository.
+
+Reuse the audited shell for navigation structure, settings structure, adaptive iPhone/iPad layout, typography foundations, standard loading/empty/error states, accessibility behavior, paywall framing, and other reusable iOS 18 presentation conventions. This product supplies only its app-specific screens, document editor, PDF preview, OCR review, AI proposal review, application tracker, and dependency wiring.
+
+The shell is a presentation dependency, not a business-logic dependency. `CareerDomain`, `CareerWorkflow`, `DocumentEngine`, `PersistenceSync`, `AIImport`, and `Purchases` must remain independently buildable and testable without it.
+
 ## Module graph
 
 ```mermaid
@@ -27,7 +35,7 @@ flowchart TD
 
 ```text
 App/
-  AppShell/
+  ShellIntegration/  # adopts lrodeveloperr/ios-18-shell
   Features/
 Packages/
   CareerDomain/
@@ -92,7 +100,9 @@ Loads StoreKit products, verifies transactions, listens for updates, derives `En
 
 ### AppShell and Features
 
-SwiftUI navigation, forms, accessibility, device adaptation, permission explanations, paywall presentation, PDF preview bridge, share sheet, and print controller.
+`ShellIntegration` adopts the reusable components and conventions from `lrodeveloperr/ios-18-shell`. Product-specific SwiftUI features provide career forms, OCR review, AI proposal review, application tracking, and document preview. This layer also wires permission explanations, the PDFKit bridge, share sheet, and print controller.
+
+Generic shell components must be improved upstream in `ios-18-shell`, then consumed here. Product-specific behavior must stay here and must not be pushed into the shared shell.
 
 ## Dependency rules
 
@@ -120,7 +130,7 @@ SwiftUI navigation, forms, accessibility, device adaptation, permission explanat
 5. StoreKit entitlements and limits.
 6. OCR candidate extraction and confirmation.
 7. Foundation Models suggestions and validation.
-8. SwiftUI feature screens using the existing native shell.
+8. Integrate `lrodeveloperr/ios-18-shell` and add only the product-specific SwiftUI screens.
 9. Device QA, CloudKit production schema, screenshots, and submission evidence.
 
 ## Official implementation references
@@ -132,4 +142,3 @@ SwiftUI navigation, forms, accessibility, device adaptation, permission explanat
 - VisionKit: https://developer.apple.com/documentation/visionkit
 - Vision text recognition: https://developer.apple.com/documentation/vision/recognizing-text-in-images
 - PDFKit: https://developer.apple.com/documentation/pdfkit
-
