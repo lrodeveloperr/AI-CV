@@ -55,3 +55,7 @@ The first accepted upload must use the full lane. Dispatch **Rirekisho AI TestFl
 - `validated_sha`: the full immutable commit SHA already carrying a successful `Swift package tests` check and the final iOS app project.
 
 After the first build is processed, delivered to the tester, and attached to the listing, record that successful run as the baseline before considering an express lane.
+
+## Review-artifact invariant
+
+The `Internal QA` group contains both designated tester accounts (2 testers; 0 builds at provisioning). The release lane archives, signs, exports, and uploads exactly once, then attaches that same Apple-processed build to the matching editable App Store version. App Review must use that attached build without rebuilding or re-signing. This proves build readiness only; listing metadata, screenshots, privacy, compliance, agreements, and review information remain separate submission gates.
