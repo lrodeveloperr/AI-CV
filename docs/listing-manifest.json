@@ -1,0 +1,370 @@
+{
+  "schema_version": "1.0",
+  "mode": "draft",
+  "app": {
+    "platform": "ios",
+    "bundle_id": "com.worksbienstudios.rirekishoai",
+    "version": "1.0",
+    "company_name": "WorksBien Studios Inc.",
+    "release_kind": "new",
+    "primary_category": "Productivity",
+    "secondary_category": "Business",
+    "category_verified_in_current_app_store_connect": false,
+    "secondary_category_verified_in_current_app_store_connect": false,
+    "game_subcategory_decision_verified": true,
+    "supported_devices": [
+      "iphone",
+      "ipad"
+    ],
+    "requires_account": false,
+    "requires_hardware": false
+  },
+  "source_control": {
+    "final_release_build_inspected": false,
+    "signed_archive_inspected": false,
+    "app_store_connect_inspected": false,
+    "public_policies_inspected": false,
+    "official_apple_sources_refreshed": true,
+    "fact_ledger_complete": false,
+    "facts_reconciled": false,
+    "final_build_identifier": "No release build has been produced",
+    "evidence_index": "README.md and docs/PRODUCT_AND_TECH_SPEC.md",
+    "final_build_reviewed_on": "2026-09-29",
+    "app_store_connect_snapshot_date": "2026-09-29",
+    "official_sources_reviewed_on": "2026-09-29",
+    "unresolved_conflicts": [
+      "Final binary and signed archive are not available for metadata parity review",
+      "App Store Connect category and localized product configuration have not been inspected",
+      "Public support and privacy endpoints have not been published and verified",
+      "Exact store name availability and trademark clearance remain to be confirmed"
+    ]
+  },
+  "aso_context": {
+    "primary_intent": "Japanese users want a reliable account-free way to create a resume and work-history PDF for job applications",
+    "observed_search_phrases": [
+      "Japan App Store live research on 2026-09-29: 履歴書作成 and 職務経歴書",
+      "Japan App Store live research on 2026-09-29: 自己PR and 志望動機",
+      "Customer review themes on 2026-09-29: PDF mismatch, line breaks, Japanese-era entry, file size, and unexpected recruiter contact"
+    ],
+    "restricted_terms": []
+  },
+  "icon": {
+    "concept": "A crisp white document silhouette with a verification check and restrained native-AI sparkle on a deep navy field, with no text",
+    "artifact_path": "",
+    "small_size_checked": false,
+    "relevant_search_grid_checked": false,
+    "build_asset_matches": false
+  },
+  "locales": [
+    {
+      "locale": "ja",
+      "name": "履歴書・職務経歴書 AI作成",
+      "subtitle": "登録不要・和暦対応・PDF出力",
+      "promotional_text": "登録不要で履歴書・職務経歴書を作成。対応端末では端末内AIが、確認済みの経歴をもとに自己PRや志望動機の文章を提案します。完成PDFは提出前にそのまま確認できます。",
+      "promotion_owner": "Product owner",
+      "promotion_review_due_on": "2026-12-01",
+      "description": "履歴書・職務経歴書 AI作成は、日本の就職・転職活動に必要な書類を、登録不要で作成できるアプリです。\n\n入力した経歴は端末内で管理。対応端末ではAppleの端末内AIを使い、確認済みの事実だけをもとに、自己PR、志望動機、職務要約などの文章を提案します。勤務先、在籍期間、資格などの事実をAIが勝手に書き換えることはありません。\n\n【主な機能】\n・履歴書、職務経歴書、送付状を作成\n・西暦と和暦の入力・表示に対応\n・書類のスキャンと文字認識を使った入力補助\n・確認済みの経歴からAIが文章を提案（対応端末のみ）\n・文章の短縮、言い換え、応募先に合わせた調整\n・完成PDFと同じレイアウトを提出前に確認\n・ページ数、入力漏れ、文字切れ、ファイルサイズを確認\n・PDFの共有と印刷\n・応募先、選考状況、提出書類を管理\n・任意のiCloud同期で自分の端末間にデータを保存\n\n【無料でできること】\n履歴書1件、職務経歴書1件の作成、完成プレビュー、PDF 1回の書き出しを利用できます。アカウント登録は必要ありません。\n\n【Proでできること】\n書類、応募先別バージョン、PDF書き出しを無制限で利用できます。さらに、対応端末でのAI文章作成、文字認識による入力、送付状、応募管理、バージョン履歴、証明写真の調整、プライベートiCloud同期を利用できます。\n\nAIが提案した内容は、提出前に必ずご自身で確認してください。AI機能の利用可否は、端末、OS、言語、およびAppleのシステムモデルの利用状況によって異なります。AIに対応していない端末でも、手動編集、PDF作成、応募管理などの基本機能は利用できます。\n\nProは自動更新サブスクリプションです。購入確認時にApple Accountへ請求され、更新日の24時間以上前に解約しない限り自動更新されます。購入の復元とサブスクリプション管理はアプリ内から行えます。価格は購入画面に表示されるApp Storeの金額をご確認ください。\n\n利用規約: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/\nプライバシーポリシー: https://worksbienstudios.com/apps/rirekisho-ai/privacy/",
+      "keywords": [
+        "就職活動",
+        "転職活動",
+        "自己PR",
+        "志望動機",
+        "送付状作成",
+        "証明写真",
+        "和暦変換"
+      ],
+      "support_url": "https://worksbienstudios.com/apps/rirekisho-ai/support/",
+      "privacy_url": "https://worksbienstudios.com/apps/rirekisho-ai/privacy/",
+      "marketing_url": "https://worksbienstudios.com/apps/rirekisho-ai/",
+      "whats_new": "",
+      "native_language_reviewed": false,
+      "ui_language_disclosed_accurately": false,
+      "locale_available_in_app_store_connect": false,
+      "no_stray_language_confirmed": false,
+      "claims_supported": false,
+      "paid_features_disclosed_if_needed": true
+    }
+  ],
+  "screenshot_count_override_reason": "Three screenshots per supported device tell outcome, AI path, and output proof without padding the launch story",
+  "required_screenshot_sets": [
+    {
+      "locale": "ja",
+      "device": "iphone",
+      "expected_count": 3,
+      "accepted_dimensions": [
+        [1290, 2796],
+        [1260, 2736]
+      ],
+      "dimension_source_url": "https://developer.apple.com/help/app-store-connect/reference/screenshot-specifications/"
+    },
+    {
+      "locale": "ja",
+      "device": "ipad",
+      "expected_count": 3,
+      "accepted_dimensions": [
+        [2064, 2752],
+        [2048, 2732]
+      ],
+      "dimension_source_url": "https://developer.apple.com/help/app-store-connect/reference/screenshot-specifications/"
+    }
+  ],
+  "screenshots": [
+    {
+      "locale": "ja",
+      "device": "iphone",
+      "position": 1,
+      "story_role": "outcome",
+      "caption": "登録不要。履歴書は端末内で完成",
+      "artifact_path": "",
+      "authentic_ui": false,
+      "dimensions_verified_against_current_apple_spec": false,
+      "display_appearance_checked": false,
+      "sample_data_consistent": false,
+      "localized_copy_checked": false,
+      "claims_supported": false,
+      "paid_feature_disclosed_if_needed": true,
+      "no_other_platform_imagery": false,
+      "search_result_legibility_checked": false
+    },
+    {
+      "locale": "ja",
+      "device": "iphone",
+      "position": 2,
+      "story_role": "path",
+      "caption": "確認した経歴からAIが文章を提案（Pro）",
+      "artifact_path": "",
+      "authentic_ui": false,
+      "dimensions_verified_against_current_apple_spec": false,
+      "display_appearance_checked": false,
+      "sample_data_consistent": false,
+      "localized_copy_checked": false,
+      "claims_supported": false,
+      "paid_feature_disclosed_if_needed": true,
+      "no_other_platform_imagery": false,
+      "search_result_legibility_checked": false
+    },
+    {
+      "locale": "ja",
+      "device": "iphone",
+      "position": 3,
+      "story_role": "proof",
+      "caption": "完成PDFを確認して、そのまま提出",
+      "artifact_path": "",
+      "authentic_ui": false,
+      "dimensions_verified_against_current_apple_spec": false,
+      "display_appearance_checked": false,
+      "sample_data_consistent": false,
+      "localized_copy_checked": false,
+      "claims_supported": false,
+      "paid_feature_disclosed_if_needed": true,
+      "no_other_platform_imagery": false,
+      "search_result_legibility_checked": false
+    },
+    {
+      "locale": "ja",
+      "device": "ipad",
+      "position": 1,
+      "story_role": "outcome",
+      "caption": "登録不要。履歴書は端末内で完成",
+      "artifact_path": "",
+      "authentic_ui": false,
+      "dimensions_verified_against_current_apple_spec": false,
+      "display_appearance_checked": false,
+      "sample_data_consistent": false,
+      "localized_copy_checked": false,
+      "claims_supported": false,
+      "paid_feature_disclosed_if_needed": true,
+      "no_other_platform_imagery": false,
+      "search_result_legibility_checked": false
+    },
+    {
+      "locale": "ja",
+      "device": "ipad",
+      "position": 2,
+      "story_role": "path",
+      "caption": "確認した経歴からAIが文章を提案（Pro）",
+      "artifact_path": "",
+      "authentic_ui": false,
+      "dimensions_verified_against_current_apple_spec": false,
+      "display_appearance_checked": false,
+      "sample_data_consistent": false,
+      "localized_copy_checked": false,
+      "claims_supported": false,
+      "paid_feature_disclosed_if_needed": true,
+      "no_other_platform_imagery": false,
+      "search_result_legibility_checked": false
+    },
+    {
+      "locale": "ja",
+      "device": "ipad",
+      "position": 3,
+      "story_role": "proof",
+      "caption": "完成PDFを確認して、そのまま提出",
+      "artifact_path": "",
+      "authentic_ui": false,
+      "dimensions_verified_against_current_apple_spec": false,
+      "display_appearance_checked": false,
+      "sample_data_consistent": false,
+      "localized_copy_checked": false,
+      "claims_supported": false,
+      "paid_feature_disclosed_if_needed": true,
+      "no_other_platform_imagery": false,
+      "search_result_legibility_checked": false
+    }
+  ],
+  "visual_disclosure": {
+    "page_clarity_reviewed": true,
+    "free_or_included_value": "One resume, one work-history document, exact preview, and one clean PDF export without an account",
+    "paid_value_and_location": "The second screenshot is marked Pro; listing copy describes unlimited documents and the native AI, OCR, tracking, history, portrait, and sync benefits"
+  },
+  "privacy": {
+    "policy_url": "https://worksbienstudios.com/apps/rirekisho-ai/privacy/",
+    "data_inventory_complete": false,
+    "third_party_sdks_included": false,
+    "app_privacy_answers_match_final_build": false,
+    "privacy_policy_matches_final_build": false,
+    "privacy_manifest_checked_in_final_archive": false,
+    "required_reason_apis_checked": false,
+    "sdk_signatures_checked": false,
+    "tracking_declaration_accurate": false,
+    "data_deletion_obligations_resolved": false
+  },
+  "monetization": {
+    "models": [
+      "auto_renewable_subscription"
+    ],
+    "products": [
+      {
+        "product_id": "com.worksbienstudios.rirekishoai.pro.monthly",
+        "type": "auto_renewable_subscription",
+        "duration": "P1M",
+        "group_id": "rirekisho_ai_pro",
+        "app_store_connect_state_verified": false,
+        "localized_metadata_complete": false,
+        "price_loaded_from_storekit": false,
+        "review_screenshot_prepared": false,
+        "visible_or_review_path_documented": true
+      },
+      {
+        "product_id": "com.worksbienstudios.rirekishoai.pro.annual",
+        "type": "auto_renewable_subscription",
+        "duration": "P1Y",
+        "group_id": "rirekisho_ai_pro",
+        "app_store_connect_state_verified": false,
+        "localized_metadata_complete": false,
+        "price_loaded_from_storekit": false,
+        "review_screenshot_prepared": false,
+        "visible_or_review_path_documented": true
+      }
+    ],
+    "public_price_and_offer_context_reviewed": true,
+    "product_ids_match_app_store_connect": false,
+    "prices_localized_from_storekit": false,
+    "purchase_locations_in_review_notes": true,
+    "paid_features_disclosed_in_metadata": true,
+    "product_review_assets_prepared": false,
+    "transaction_verification_enabled": false,
+    "storekit_error_states_tested": false,
+    "subscription_group_and_products_verified": false,
+    "ongoing_value_confirmed": true,
+    "duration_renewal_and_full_price_prominent": false,
+    "privacy_and_terms_visible": true,
+    "restore_purchases_available": false,
+    "manage_subscription_available": false,
+    "subscription_lifecycle_states_tested": false,
+    "offer_eligibility_enforced": true,
+    "first_subscription_submission_resolved": false,
+    "privacy_url": "https://worksbienstudios.com/apps/rirekisho-ai/privacy/",
+    "terms_url": "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+  },
+  "review": {
+    "notes": "No account is required. Reviewers can create one resume and one work-history document and export one PDF on the free path. Settings > Pro contains purchase, restore, and manage-subscription actions. Native AI appears only on supported devices and never changes canonical facts without explicit approval. Camera and biometric permissions are requested only from user-triggered scan and app-lock actions.",
+    "contact_complete": false,
+    "demo_access_complete": true,
+    "navigation_path_documented": true,
+    "non_obvious_features_explained": true,
+    "permission_steps_explained": true
+  },
+  "guideline_review": {
+    "source_url": "https://developer.apple.com/app-store/review/guidelines/",
+    "reviewed_on": "2026-09-29",
+    "applicable_ids": [
+      "1.4",
+      "2.1",
+      "2.3",
+      "2.5.1",
+      "3.1.1",
+      "3.1.2",
+      "4.1",
+      "4.2",
+      "4.3",
+      "5.1.1",
+      "5.1.2"
+    ],
+    "family_rationale": {
+      "1": "AI-generated employment text must not make harmful or deceptive promises and must be reviewable by the user",
+      "2": "The final binary must be complete, stable, accurately described, and limited to public APIs",
+      "3": "Auto-renewable Pro subscriptions use StoreKit and must clearly provide ongoing value and lifecycle controls",
+      "4": "The app must provide durable native utility and distinct execution rather than copying a competitor",
+      "5": "Career records are sensitive user content, so minimization, just-in-time permissions, local processing, and policy accuracy are central"
+    },
+    "dispositions": [
+      {"id": "1.4", "status": "blocked", "evidence": "Final AI safety behavior and submitted binary have not been inspected"},
+      {"id": "2.1", "status": "blocked", "evidence": "A release-candidate build does not yet exist for stability testing"},
+      {"id": "2.3", "status": "blocked", "evidence": "Metadata is drafted but cannot be reconciled to a final build"},
+      {"id": "2.5.1", "status": "blocked", "evidence": "Signed archive and API usage have not yet been inspected"},
+      {"id": "3.1.1", "status": "blocked", "evidence": "StoreKit products have not yet been created or tested"},
+      {"id": "3.1.2", "status": "blocked", "evidence": "Subscription lifecycle and ongoing value have not been verified in the build"},
+      {"id": "4.1", "status": "blocked", "evidence": "Final icon, screenshots, and implementation require copycat review"},
+      {"id": "4.2", "status": "blocked", "evidence": "Minimum functionality must be demonstrated in the final binary"},
+      {"id": "4.3", "status": "blocked", "evidence": "Store positioning is differentiated but final binary and listing require spam review"},
+      {"id": "5.1.1", "status": "blocked", "evidence": "Final data inventory and live privacy policy are not yet available"},
+      {"id": "5.1.2", "status": "blocked", "evidence": "Final data use, CloudKit behavior, and archive require verification"}
+    ]
+  },
+  "compliance_controls": {
+    "app_stability": {"status": "blocked", "evidence": "No release-candidate build exists"},
+    "metadata_build_parity": {"status": "blocked", "evidence": "No final build exists for comparison"},
+    "metadata_complete_accurate": {"status": "blocked", "evidence": "Build-dependent facts and public URLs remain unverified"},
+    "screenshots_authentic_current": {"status": "blocked", "evidence": "Authentic final-UI screenshots have not been captured"},
+    "reviewer_access": {"status": "blocked", "evidence": "Final navigation paths require build verification"},
+    "legal_urls_live": {"status": "blocked", "evidence": "Intended public endpoints have not been published and tested"},
+    "privacy_policy_matches_build": {"status": "blocked", "evidence": "Neither final policy nor final build is available"},
+    "app_privacy_answers_match_build_and_sdks": {"status": "blocked", "evidence": "Final dependency and data-flow inventory is unavailable"},
+    "privacy_manifest_archive_checked": {"status": "blocked", "evidence": "Signed archive is unavailable"},
+    "required_reason_apis_and_sdk_signatures_checked": {"status": "blocked", "evidence": "Signed archive is unavailable"},
+    "permissions_just_in_time": {"status": "blocked", "evidence": "Permission timing requires final UI testing"},
+    "age_rating_accurate": {"status": "blocked", "evidence": "Current questionnaire has not been completed against the final build"},
+    "content_rights_confirmed": {"status": "blocked", "evidence": "Final template, font, icon, and asset set does not exist"},
+    "export_compliance_resolved": {"status": "blocked", "evidence": "Final binary and entitlements are unavailable"},
+    "no_private_apis_hidden_features_placeholders": {"status": "blocked", "evidence": "Final binary is unavailable for inspection"},
+    "accessibility_device_locale_rtl_checked": {"status": "blocked", "evidence": "Final UI is unavailable for device and accessibility testing"},
+    "regional_availability_reviewed": {"status": "blocked", "evidence": "Japan-only availability has not been confirmed in App Store Connect"},
+    "contact_information_current": {"status": "blocked", "evidence": "Private review contact and live support endpoint require verification"},
+    "applicable_guidelines_reviewed": {"status": "blocked", "evidence": "Guidelines were refreshed but final feature and binary review remains"}
+  },
+  "aso_controls": {
+    "search_intent_researched": {"status": "pass", "evidence": "Live Japanese App Store research dated 2026-09-29 covered direct résumé and work-history competitors, ratings, pricing, descriptions, and review complaints"},
+    "name_subtitle_fit_confirmed": {"status": "pass", "evidence": "Name and subtitle are within 30 characters and align with the primary create-resume intent"},
+    "keyword_field_relevant_deduplicated": {"status": "pass", "evidence": "Keyword field is 89 UTF-8 bytes and avoids name and subtitle repetition"},
+    "competitor_trademark_screened": {"status": "blocked", "evidence": "Formal trademark and final App Store name-availability checks remain"},
+    "category_fit_confirmed": {"status": "pass", "evidence": "Comparable Japanese résumé builders with strong rating volume are listed in Productivity"},
+    "description_explains_workflow": {"status": "pass", "evidence": "Description covers entry, fact confirmation, native AI, preview, export, free boundary, Pro boundary, sync, and unsupported-device behavior"},
+    "launch_visual_story": {"status": "pass", "evidence": "Three-frame plan covers outcome, paid AI path, and exact-output proof for iPhone and iPad"},
+    "icon_small_size_checked": {"status": "blocked", "evidence": "No final icon artifact exists"},
+    "native_locale_adaptation": {"status": "blocked", "evidence": "Japanese draft requires native-language editorial review"},
+    "search_to_product_page_alignment": {"status": "pass", "evidence": "High-intent résumé and work-history concepts lead directly to the document creation and PDF outcome"},
+    "claims_supported": {"status": "blocked", "evidence": "Product claims require final-build verification"},
+    "post_launch_measurement_ready": {"status": "blocked", "evidence": "Privacy-preserving product metrics and App Store reporting plan require implementation"}
+  },
+  "authorization": {
+    "live_submission_authorized": false,
+    "authorization_evidence": "Repository upload is authorized; App Store submission is not authorized"
+  },
+  "human_review": {
+    "attested": false,
+    "reviewer": "",
+    "evidence": "Native Japanese copy and final-build review have not occurred",
+    "reviewed_on": "2026-09-29"
+  }
+}
