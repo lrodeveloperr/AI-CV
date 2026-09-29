@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0",
+  "state": "awaiting_ios_source_and_credential_route",
+  "repository": "lrodeveloperr/AI-CV",
+  "bundle_id": "com.worksbienstudios.rirekishoai",
+  "team_id": "49SQ3XQ68Q",
+  "asc_app_id": "6817388738",
+  "credential_alias": "worksbien-primary",
+  "asc_key_id": "",
+  "asc_issuer_id": "",
+  "private_key_secret_name": "ASC_PRIVATE_KEY",
+  "runtime_env": {
+    "key_id": "ASC_KEY_ID",
+    "issuer_id": "ASC_ISSUER_ID",
+    "private_key": "ASC_PRIVATE_KEY"
+  },
+  "beta_group_id": "297cda24-0a7a-4e42-a771-671c5021dfd9",
+  "listing_platform": "IOS",
+  "marketing_version": "1.0",
+  "xcode_container_type": "",
+  "xcode_container": "",
+  "scheme": "",
+  "required_check_name": "Swift package tests",
+  "signing_style": "automatic",
+  "export_method": "app-store-connect",
+  "signing_certificate": "Apple Distribution",
+  "required_entitlements": [
+    "com.apple.developer.icloud-container-identifiers",
+    "com.apple.developer.icloud-services:CloudKit"
+  ]
+}
