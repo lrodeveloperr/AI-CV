@@ -80,7 +80,7 @@ Begin repository review at [`INDEX.md`](INDEX.md). Commercial values must match 
 | Field | Draft answer |
 |---|---|
 | Name | 履歴書・職務経歴書 AI作成 [AI Résumé & Work History Maker] |
-| Subtitle | 登録不要・和暦対応・PDF出力 [No account, Japanese-era support, PDF export] |
+| Subtitle | 登録不要・自己PR作成・和暦対応・PDF出力 [No account, self-promotion writing, Japanese-era support, PDF export] |
 | Primary language | Japanese |
 | Availability | Japan |
 | Price | Free |

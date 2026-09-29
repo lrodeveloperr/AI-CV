@@ -14,57 +14,63 @@ The authoritative product scope is [`product/PRODUCT_SCOPE.md`](product/PRODUCT_
 
 This retains the two strongest high-intent Japanese search concepts while avoiding the misleading “fully local” claim when a user voluntarily enables private iCloud sync.
 
-### Subtitle — 15/30 characters
+### Subtitle — 22/30 characters
 
-**Production Japanese:** `登録不要・和暦対応・PDF出力`
+**Production Japanese:** `登録不要・自己PR作成・和暦対応・PDF出力`
 
-**English:** [No account, Japanese-era support, PDF export]
+**English:** [No account, self-promotion writing, Japanese-era support, PDF export]
 
-### Promotional text — 82/170 characters
+### Promotional text — 108/170 characters
 
 **Production Japanese:**
 
-> 登録不要で履歴書・職務経歴書を作成。対応端末では端末内AIが、確認済みの経歴をもとに自己PRや志望動機の文章を提案します。完成PDFは提出前にそのまま確認できます。
+> 登録不要で履歴書・職務経歴書を作成。和暦にも対応し、プレビューと同じPDFを書き出せます。Apple Intelligence対応端末では、確認済みの経歴から自己PRや志望動機の文章を提案します（AI機能はPro）。
 
-**English:** [Create résumés and work-history documents without an account. On supported devices, on-device AI suggests self-promotion and motivation text from your confirmed career facts. Preview the finished PDF exactly before submitting.]
+**English:** [Create résumés and work-history documents without an account. On Apple Intelligence-capable devices, on-device AI suggests self-promotion and motivation text from your confirmed career facts. Export a PDF identical to the preview. AI features are Pro.]
 
-### Keywords — 89/100 UTF-8 bytes
+### Keywords — 98/100 UTF-8 bytes
 
-**Production field:** `就職活動,転職活動,自己PR,志望動機,送付状作成,証明写真,和暦変換`
+**Production field:** `就活,転職,志望動機,送付状,添え状,証明写真,レジュメ,カバーレター,職歴`
 
-**English:** [job hunting, career change, self-promotion, motivation, cover-letter creation, ID photo, Japanese-era conversion]
+**English:** [job hunting, career change, motivation, cover letter, cover letter (alternate term), ID photo, résumé (loanword), cover letter (loanword), work history]
 
-The name/subtitle terms are intentionally not repeated in the keyword field.
+The name/subtitle terms are intentionally not repeated in the keyword field. 就活 and 転職 are the short forms users actually search; Apple does not reliably match them as substrings of 就職活動/転職活動.
 
 ### Full description
 
 **Production Japanese:**
 
-> 履歴書・職務経歴書 AI作成は、日本の就職・転職活動に必要な書類を、登録不要で作成できるアプリです。
+> 登録不要で、履歴書・職務経歴書・送付状を作成してPDFで書き出せる、就職・転職活動のための書類作成アプリです。和暦（令和・平成など）にも対応しています。
 >
-> 入力した経歴は端末内で管理。対応端末ではAppleの端末内AIを使い、確認済みの事実だけをもとに、自己PR、志望動機、職務要約などの文章を提案します。勤務先、在籍期間、資格などの事実をAIが勝手に書き換えることはありません。
+> 入力した経歴はお使いの端末に保存されます。Apple Intelligenceに対応した端末では、端末内のAIが、あなたが確認した経歴の事実だけをもとに、自己PR・志望動機・職務要約の文章を提案します。提案は承認するまで書類に反映されず、勤務先・在籍期間・資格などの事実は変更されません。
 >
 > 【主な機能】
-> ・履歴書、職務経歴書、送付状を作成
-> ・西暦と和暦の入力・表示に対応
-> ・書類のスキャンと文字認識を使った入力補助
-> ・確認済みの経歴からAIが文章を提案（対応端末のみ）
+> ・履歴書、職務経歴書、送付状の作成
+> ・西暦・和暦の入力と表示
+> ・書類をスキャンして文字認識（OCR）で入力を補助
+> ・自己PR、志望動機、職務要約の文章を提案（Apple Intelligence対応端末のみ）
 > ・文章の短縮、言い換え、応募先に合わせた調整
-> ・完成PDFと同じレイアウトを提出前に確認
-> ・ページ数、入力漏れ、文字切れ、ファイルサイズを確認
+> ・提出するPDFと同じ仕上がりをプレビューで確認
+> ・ページ数、入力漏れ、文字の見切れ、ファイルサイズをチェック
 > ・PDFの共有と印刷
-> ・応募先、選考状況、提出書類を管理
-> ・任意のiCloud同期で自分の端末間にデータを保存
+> ・応募先、選考状況、提出書類の管理
+> ・iCloud同期（任意）でお手持ちのデバイス間でデータを同期
 >
 > 【無料でできること】
-> 履歴書1件、職務経歴書1件の作成、完成プレビュー、PDF 1回の書き出しを利用できます。アカウント登録は必要ありません。
+> 履歴書1件・職務経歴書1件の作成、完成プレビュー、PDFの書き出し（1回）をご利用いただけます。アカウント登録は不要です。
 >
 > 【Proでできること】
-> 書類、応募先別バージョン、PDF書き出しを無制限で利用できます。さらに、対応端末でのAI文章作成、文字認識による入力、送付状、応募管理、バージョン履歴、証明写真の調整、プライベートiCloud同期を利用できます。
+> 書類、応募先別バージョン、PDF書き出しが無制限になります。さらに、AIによる文章作成、OCR入力、送付状、応募管理、バージョン履歴、証明写真の調整、プライベートiCloud同期をご利用いただけます。
 >
-> AIが提案した内容は、提出前に必ずご自身で確認してください。AI機能の利用可否は、端末、OS、言語、およびAppleのシステムモデルの利用状況によって異なります。AIに対応していない端末でも、手動編集、PDF作成、応募管理などの基本機能は利用できます。
+> 【ご注意】
+> ・AIが提案した文章は、提出前に必ずご自身で内容をご確認ください。
+> ・AI機能は、端末、OSのバージョン、言語、Apple Intelligenceの設定・利用状況によってはご利用いただけません。AIをご利用いただけない端末でも、手入力での編集、PDF作成、応募管理などの基本機能はお使いいただけます。
 >
-> Proは自動更新サブスクリプションです。購入確認時にApple Accountへ請求され、更新日の24時間以上前に解約しない限り自動更新されます。購入の復元とサブスクリプション管理はアプリ内から行えます。価格は購入画面に表示されるApp Storeの金額をご確認ください。
+> 【Proのご案内（自動更新）】
+> ・プランは月額と年額の2種類です。料金は購入画面に表示されます。
+> ・購入の確認時にApple Accountへ請求されます。
+> ・現在の期間が終了する24時間以上前に解約しない限り、同じ期間で自動的に更新されます。
+> ・購入の復元とサブスクリプションの管理は、アプリ内のPro画面から行えます。
 >
 > 利用規約: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 > プライバシーポリシー: https://worksbienstudios.com/apps/rirekisho-ai/privacy/
