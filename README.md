@@ -10,24 +10,17 @@ A private, native iPhone and iPad app for creating Japanese résumés, work-hist
 - App Store copy: **DRAFT_READY**
 - App Store submission: **BLOCKED until the final build, screenshots, public URLs, and App Store Connect facts are verified**
 
-## Locked offer
+## Repository navigation
 
-- Free: one résumé, one work-history document, exact preview, and one clean PDF export.
-- Pro monthly: **¥500/month**.
-- Pro annual: **¥3,000/year**.
-- No lifetime purchase and no introductory free trial.
-- Pro unlocks unlimited documents, variants, and exports; native AI drafting and tailoring; OCR import; application tracking; version history; photo cleanup; and private iCloud sync.
+Start with [`docs/INDEX.md`](docs/INDEX.md). It maps each decision to one authoritative file so multiple tools can work in the repository without creating contradictory copies.
 
-Prices are configured in App Store Connect and rendered in-app using StoreKit's localized values. Static prices are intentionally excluded from public metadata.
+- Product scope and flows are under `docs/product/`.
+- Native implementation architecture is under `docs/architecture/`.
+- Automated and device-level quality gates are under `docs/quality/`.
+- App Store listing, submission checklist, and machine-readable manifest remain separate files under `docs/`.
 
-## Repository documents
-
-- [`docs/PRODUCT_AND_TECH_SPEC.md`](docs/PRODUCT_AND_TECH_SPEC.md) — locked product, architecture, data model, feature boundary, and quality gates.
-- [`docs/APP_STORE_LISTING_JA.md`](docs/APP_STORE_LISTING_JA.md) — complete Japanese App Store listing draft with English working translations.
-- [`docs/APP_STORE_SUBMISSION_CHECKLIST.md`](docs/APP_STORE_SUBMISSION_CHECKLIST.md) — App Store Connect answers, compliance controls, review notes, and remaining blockers.
-- [`docs/listing-manifest.json`](docs/listing-manifest.json) — machine-readable listing and submission state.
+The authoritative pricing and entitlement record is [`docs/product/PRICING_AND_ENTITLEMENTS.md`](docs/product/PRICING_AND_ENTITLEMENTS.md).
 
 ## Product principle
 
 The app never lets generative AI silently change an employer, date, qualification, or other factual record. AI proposes wording; the user approves it; deterministic code owns the final document.
-
