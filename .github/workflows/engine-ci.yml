@@ -1,0 +1,42 @@
+name: Engine CI
+
+on:
+  pull_request:
+    paths:
+      - "Package.swift"
+      - "Sources/**"
+      - "Tests/**"
+      - ".github/workflows/engine-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "Package.swift"
+      - "Sources/**"
+      - "Tests/**"
+      - ".github/workflows/engine-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: engine-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  swift-test:
+    name: Swift package tests
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show Swift toolchain
+        run: swift --version
+
+      - name: Validate package graph
+        run: swift package describe
+
+      - name: Build and test engine
+        run: swift test --parallel -Xswiftc -warnings-as-errors
+

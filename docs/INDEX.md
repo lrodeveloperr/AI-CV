@@ -2,6 +2,8 @@
 
 This index is the entry point for humans and repository tools. Each decision has one authoritative file; other documents link to it instead of maintaining a second copy.
 
+Engine source is under `Sources/`, focused engine evidence is under `Tests/`, and the authoritative workflow is `.github/workflows/engine-ci.yml`.
+
 ## Read order
 
 1. [`product/PRODUCT_SCOPE.md`](product/PRODUCT_SCOPE.md) — customer, promise, version 1.0 scope, and non-goals.
