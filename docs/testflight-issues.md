@@ -11,3 +11,9 @@ No TestFlight session has run for this app yet.
 - Symptom: The default branch does not yet contain a distributable app Xcode project/workspace with a shared scheme, and the App Store Connect API credential route is not configured.
 - Prevention: The workflow is fail-closed and performs these checks on Linux before allocating macOS. It also rejects signed archives and IPAs that omit the required iCloud/CloudKit entitlements.
 - Next action: Add the real iOS app project, fill the Xcode fields in the non-secret app map, configure the App Store Connect credential route, then switch the map state to `ready`.
+
+## Tester target
+
+- Status: `resolved`
+- `Internal QA` contains both designated internal tester accounts.
+- The delivery helper assigns the exact processed build to that group and attaches the same build to the editable App Store version for later review without re-signing.
