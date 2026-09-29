@@ -4,6 +4,8 @@
 
 **DRAFT_READY, not submission-ready.** Product copy, price architecture, native stack, free/paid boundary, and reviewer explanation are drafted. The following evidence must exist before anyone marks the release ready.
 
+Begin repository review at [`INDEX.md`](INDEX.md). Commercial values must match [`product/PRICING_AND_ENTITLEMENTS.md`](product/PRICING_AND_ENTITLEMENTS.md), and shipped behavior must match the focused architecture documents.
+
 ## Build and metadata
 
 - [ ] Final release build and signed archive identified.
@@ -99,4 +101,3 @@
 - Screenshot specifications: https://developer.apple.com/help/app-store-connect/reference/screenshot-specifications/
 - App privacy: https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy/
 - Auto-renewable subscriptions: https://developer.apple.com/app-store/subscriptions/
-
