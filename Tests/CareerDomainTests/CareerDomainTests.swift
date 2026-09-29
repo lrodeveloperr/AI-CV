@@ -52,8 +52,10 @@ import Testing
 @Test func exportLedgerIsIdempotent() {
     var ledger = UsageLedger()
     let operationID = UUID()
-    #expect(ledger.recordCompletedExport(operationID: operationID))
-    #expect(!ledger.recordCompletedExport(operationID: operationID))
+    let first = ledger.recordCompletedExport(operationID: operationID)
+    let repeated = ledger.recordCompletedExport(operationID: operationID)
+    #expect(first)
+    #expect(!repeated)
     #expect(ledger.completedExportCount == 1)
 }
 
@@ -79,4 +81,3 @@ import Testing
     let issues = CareerValidator.validate(document, against: profile)
     #expect(issues.map(\.code).contains("narrative.unconfirmed-fact"))
 }
-
