@@ -2,6 +2,8 @@
 
 **Status:** `DRAFT_READY` — copy and commercial decisions are locked. Submission remains blocked on the final build, authentic screenshots, live policy/support URLs, App Store Connect configuration, and archive-level privacy/compliance checks.
 
+The authoritative product scope is [`product/PRODUCT_SCOPE.md`](product/PRODUCT_SCOPE.md). Prices and entitlements are controlled by [`product/PRICING_AND_ENTITLEMENTS.md`](product/PRICING_AND_ENTITLEMENTS.md); this listing must remain consistent with that file.
+
 ## 1. Product-page metadata
 
 ### App name — 14/30 characters
