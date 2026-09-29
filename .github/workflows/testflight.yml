@@ -1,0 +1,356 @@
+name: Rirekisho AI TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type UPLOAD RIREKISHO AI TESTFLIGHT
+        required: true
+        type: string
+      validated_sha:
+        description: Exact commit SHA already proven by CI
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  checks: read
+  contents: read
+
+concurrency:
+  group: rirekisho-ai-testflight
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Cheap release and credential preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      app_id: ${{ steps.map.outputs.app_id }}
+      beta_group_id: ${{ steps.map.outputs.beta_group_id }}
+      bundle_id: ${{ steps.map.outputs.bundle_id }}
+      build_number: ${{ steps.build.outputs.build_number }}
+      container: ${{ steps.map.outputs.container }}
+      container_type: ${{ steps.map.outputs.container_type }}
+      marketing_version: ${{ steps.map.outputs.marketing_version }}
+      platform: ${{ steps.map.outputs.platform }}
+      scheme: ${{ steps.map.outputs.scheme }}
+      team_id: ${{ steps.map.outputs.team_id }}
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+      EXPECTED_ASC_KEY_ID: ${{ vars.ASC_EXPECTED_KEY_ID }}
+      EXPECTED_ASC_ISSUER_ID: ${{ vars.ASC_EXPECTED_ISSUER_ID }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check out the requested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.validated_sha }}
+
+      - name: Confirm immutable release request
+        shell: bash
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          VALIDATED_SHA: ${{ inputs.validated_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$CONFIRMATION" == "UPLOAD RIREKISHO AI TESTFLIGHT" ]] || { echo "Confirmation phrase is incorrect." >&2; exit 1; }
+          [[ "$VALIDATED_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "validated_sha must be a complete commit SHA." >&2; exit 1; }
+          [[ "$(git rev-parse HEAD)" == "$VALIDATED_SHA" ]] || { echo "Checked-out SHA does not match validated_sha." >&2; exit 1; }
+
+      - name: Load fail-closed app map
+        id: map
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib
+          path = pathlib.Path('.github/testflight-app-map.json')
+          data = json.loads(path.read_text())
+          required = ['repository','bundle_id','team_id','asc_app_id','asc_key_id','asc_issuer_id','beta_group_id','listing_platform','marketing_version','xcode_container_type','xcode_container','scheme','required_check_name','signing_style','export_method','signing_certificate']
+          missing = [key for key in required if not str(data.get(key, '')).strip()]
+          if data.get('state') != 'ready':
+              missing.insert(0, 'state=ready')
+          if missing:
+              raise SystemExit('TestFlight map is not release-ready: ' + ', '.join(missing))
+          if data['repository'] != os.environ['GITHUB_REPOSITORY']:
+              raise SystemExit('Repository does not match the app map.')
+          if data['xcode_container_type'] not in ('project','workspace'):
+              raise SystemExit('xcode_container_type must be project or workspace.')
+          if data['signing_style'] != 'automatic':
+              raise SystemExit('The locked signing style must remain automatic.')
+          if data['export_method'] != 'app-store-connect':
+              raise SystemExit('The locked export method must remain app-store-connect.')
+          if data['signing_certificate'] != 'Apple Distribution':
+              raise SystemExit('The locked signing certificate must remain Apple Distribution.')
+          container = pathlib.Path(data['xcode_container'])
+          if not container.exists():
+              raise SystemExit(f'Mapped Xcode container is missing: {container}')
+          output = pathlib.Path(os.environ['GITHUB_OUTPUT'])
+          values = {
+              'app_id': data['asc_app_id'], 'beta_group_id': data['beta_group_id'],
+              'bundle_id': data['bundle_id'], 'container': data['xcode_container'],
+              'container_type': data['xcode_container_type'], 'marketing_version': data['marketing_version'],
+              'platform': data['listing_platform'], 'scheme': data['scheme'], 'team_id': data['team_id'],
+              'expected_key_id': data['asc_key_id'], 'expected_issuer_id': data['asc_issuer_id'],
+              'required_check_name': data['required_check_name']
+          }
+          with output.open('a') as handle:
+              for key, value in values.items(): handle.write(f'{key}={value}\n')
+          PY
+
+      - name: Prove exact-SHA CI
+        shell: bash
+        env:
+          REQUIRED_CHECK: ${{ steps.map.outputs.required_check_name }}
+          VALIDATED_SHA: ${{ inputs.validated_sha }}
+        run: |
+          set -euo pipefail
+          gh api \
+            -H 'Accept: application/vnd.github+json' \
+            "/repos/$GITHUB_REPOSITORY/commits/$VALIDATED_SHA/check-runs?per_page=100" \
+            > "$RUNNER_TEMP/check-runs.json"
+          python3 - "$RUNNER_TEMP/check-runs.json" "$REQUIRED_CHECK" <<'PY'
+          import json, sys
+          runs = json.load(open(sys.argv[1])).get('check_runs', [])
+          wanted = sys.argv[2]
+          passed = [r for r in runs if (r.get('name') == wanted or wanted in r.get('name','')) and r.get('conclusion') == 'success']
+          if not passed:
+              raise SystemExit(f'No successful exact-SHA check matched {wanted!r}.')
+          PY
+
+      - name: Verify mapped App Store Connect route
+        shell: bash
+        env:
+          ASC_APP_ID: ${{ steps.map.outputs.app_id }}
+          IOS_BUNDLE_ID: ${{ steps.map.outputs.bundle_id }}
+          MAP_KEY_ID: ${{ steps.map.outputs.expected_key_id }}
+          MAP_ISSUER_ID: ${{ steps.map.outputs.expected_issuer_id }}
+        run: |
+          set -euo pipefail
+          [[ -n "$ASC_KEY_ID" && -n "$ASC_ISSUER_ID" && -n "$ASC_PRIVATE_KEY" ]] || { echo "ASC_KEY_ID, ASC_ISSUER_ID and ASC_PRIVATE_KEY secrets are required." >&2; exit 1; }
+          [[ -n "$EXPECTED_ASC_KEY_ID" && -n "$EXPECTED_ASC_ISSUER_ID" ]] || { echo "ASC_EXPECTED_KEY_ID and ASC_EXPECTED_ISSUER_ID repository variables are required." >&2; exit 1; }
+          [[ "$ASC_KEY_ID" == "$MAP_KEY_ID" && "$ASC_KEY_ID" == "$EXPECTED_ASC_KEY_ID" ]] || { echo "Mapped App Store Connect key mismatch." >&2; exit 1; }
+          [[ "$ASC_ISSUER_ID" == "$MAP_ISSUER_ID" && "$ASC_ISSUER_ID" == "$EXPECTED_ASC_ISSUER_ID" ]] || { echo "Mapped App Store Connect issuer mismatch." >&2; exit 1; }
+          key_path="$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8"
+          umask 077
+          printf '%s' "$ASC_PRIVATE_KEY" > "$key_path"
+          grep -Fq -- '-----BEGIN PRIVATE KEY-----' "$key_path"
+          grep -Fq -- '-----END PRIVATE KEY-----' "$key_path"
+          jwt="$(ruby scripts/asc_jwt.rb "$key_path" "$ASC_KEY_ID" "$ASC_ISSUER_ID")"
+          curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $jwt" \
+            "https://api.appstoreconnect.apple.com/v1/apps/$ASC_APP_ID" \
+            -o "$RUNNER_TEMP/app.json"
+          python3 - "$RUNNER_TEMP/app.json" <<'PY'
+          import json, os, sys
+          app = json.load(open(sys.argv[1]))['data']
+          if app['id'] != os.environ['ASC_APP_ID'] or app['attributes']['bundleId'] != os.environ['IOS_BUNDLE_ID']:
+              raise SystemExit('Authenticated App Store Connect route does not match the mapped app.')
+          PY
+
+      - name: Choose an unused build number
+        id: build
+        shell: bash
+        env:
+          ASC_APP_ID: ${{ steps.map.outputs.app_id }}
+        run: |
+          set -euo pipefail
+          key_path="$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8"
+          jwt="$(ruby scripts/asc_jwt.rb "$key_path" "$ASC_KEY_ID" "$ASC_ISSUER_ID")"
+          curl --fail-with-body --silent --show-error --get \
+            -H "Authorization: Bearer $jwt" \
+            --data-urlencode "filter[app]=$ASC_APP_ID" \
+            --data-urlencode 'sort=-uploadedDate' \
+            --data-urlencode 'limit=50' \
+            'https://api.appstoreconnect.apple.com/v1/builds' \
+            -o "$RUNNER_TEMP/builds.json"
+          build_number="$(python3 - "$RUNNER_TEMP/builds.json" <<'PY'
+          import json, sys
+          versions = [x.get('attributes',{}).get('version','') for x in json.load(open(sys.argv[1])).get('data',[])]
+          numeric = [int(v) for v in versions if v.isdigit()]
+          print((max(numeric) if numeric else 0) + 1)
+          PY
+          )"
+          echo "build_number=$build_number" >> "$GITHUB_OUTPUT"
+
+  build-upload:
+    name: Archive, export, verify and upload once
+    needs: preflight
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      APPLE_TEAM_ID: ${{ needs.preflight.outputs.team_id }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+      BUILD_NUMBER: ${{ needs.preflight.outputs.build_number }}
+      CONTAINER_PATH: ${{ needs.preflight.outputs.container }}
+      CONTAINER_TYPE: ${{ needs.preflight.outputs.container_type }}
+      IOS_BUNDLE_ID: ${{ needs.preflight.outputs.bundle_id }}
+      MARKETING_VERSION: ${{ needs.preflight.outputs.marketing_version }}
+      SCHEME: ${{ needs.preflight.outputs.scheme }}
+    steps:
+      - name: Check out validated commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.validated_sha }}
+
+      - name: Select Xcode and prepare credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -d /Applications/Xcode_26.6.app ]]; then
+            sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          fi
+          xcodebuild -version
+          key_dir="$HOME/.appstoreconnect/private_keys"
+          mkdir -p "$key_dir"
+          chmod 700 "$key_dir"
+          key_path="$key_dir/AuthKey_${ASC_KEY_ID}.p8"
+          umask 077
+          printf '%s' "$ASC_PRIVATE_KEY" > "$key_path"
+          chmod 600 "$key_path"
+          echo "ASC_KEY_PATH=$key_path" >> "$GITHUB_ENV"
+          echo "ARCHIVE_PATH=$RUNNER_TEMP/RirekishoAI.xcarchive" >> "$GITHUB_ENV"
+          echo "EXPORT_PATH=$RUNNER_TEMP/export" >> "$GITHUB_ENV"
+
+      - name: Archive once
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$CONTAINER_TYPE" == "workspace" ]]; then flag=-workspace; else flag=-project; fi
+          xcodebuild "$flag" "$CONTAINER_PATH" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$ARCHIVE_PATH" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            PRODUCT_BUNDLE_IDENTIFIER="$IOS_BUNDLE_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            MARKETING_VERSION="$MARKETING_VERSION" \
+            CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            archive
+
+      - name: Verify the automatically signed archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="$(find "$ARCHIVE_PATH/Products/Applications" -maxdepth 1 -type d -name '*.app' -print -quit)"
+          [[ -n "$app" ]] || { echo "Archived app not found." >&2; exit 1; }
+          plist="$app/Info.plist"
+          [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$plist")" == "$IOS_BUNDLE_ID" ]]
+          [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$plist")" == "$MARKETING_VERSION" ]]
+          [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$plist")" == "$BUILD_NUMBER" ]]
+          [[ -f "$app/PrivacyInfo.xcprivacy" ]] || { echo "PrivacyInfo.xcprivacy is missing." >&2; exit 1; }
+          entitlements="$RUNNER_TEMP/archive-entitlements.plist"
+          codesign -d --entitlements :- "$app" > "$entitlements" 2>/dev/null
+          /usr/libexec/PlistBuddy -c 'Print :com.apple.developer.icloud-container-identifiers' "$entitlements" >/dev/null
+          /usr/libexec/PlistBuddy -c 'Print :com.apple.developer.icloud-services' "$entitlements" | grep -Fq CloudKit
+          codesign --verify --deep --strict --verbose=2 "$app"
+          signature="$(codesign -dvv "$app" 2>&1)"
+          [[ "$signature" == *"TeamIdentifier=$APPLE_TEAM_ID"* ]]
+
+      - name: Export signed IPA once
+        shell: bash
+        run: |
+          set -euo pipefail
+          options="$RUNNER_TEMP/ExportOptions.plist"
+          cat > "$options" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>export</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath "$ARCHIVE_PATH" \
+            -exportPath "$EXPORT_PATH" \
+            -exportOptionsPlist "$options" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+          ipa="$(find "$EXPORT_PATH" -maxdepth 1 -type f -name '*.ipa' -print -quit)"
+          [[ -n "$ipa" ]] || { echo "IPA export failed." >&2; exit 1; }
+          echo "IPA_PATH=$ipa" >> "$GITHUB_ENV"
+
+      - name: Verify the exported package
+        shell: bash
+        run: |
+          set -euo pipefail
+          verify="$RUNNER_TEMP/ipa-verify"
+          mkdir -p "$verify"
+          ditto -x -k "$IPA_PATH" "$verify"
+          app="$(find "$verify/Payload" -maxdepth 1 -type d -name '*.app' -print -quit)"
+          [[ -n "$app" ]]
+          plist="$app/Info.plist"
+          [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$plist")" == "$IOS_BUNDLE_ID" ]]
+          [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$plist")" == "$MARKETING_VERSION" ]]
+          [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$plist")" == "$BUILD_NUMBER" ]]
+          [[ -f "$app/PrivacyInfo.xcprivacy" ]]
+          entitlements="$RUNNER_TEMP/export-entitlements.plist"
+          codesign -d --entitlements :- "$app" > "$entitlements" 2>/dev/null
+          /usr/libexec/PlistBuddy -c 'Print :com.apple.developer.icloud-container-identifiers' "$entitlements" >/dev/null
+          /usr/libexec/PlistBuddy -c 'Print :com.apple.developer.icloud-services' "$entitlements" | grep -Fq CloudKit
+          codesign --verify --deep --strict --verbose=2 "$app"
+          signature="$(codesign -dvv "$app" 2>&1)"
+          [[ "$signature" == *'Authority=Apple Distribution'* ]]
+          [[ "$signature" == *"TeamIdentifier=$APPLE_TEAM_ID"* ]]
+
+      - name: Upload the same IPA once
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$ASC_KEY_ID" \
+            --apiIssuer "$ASC_ISSUER_ID"
+
+  deliver:
+    name: Process, deliver and attach exact build
+    needs: [preflight, build-upload]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      ASC_APP_ID: ${{ needs.preflight.outputs.app_id }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+      BETA_GROUP_ID: ${{ needs.preflight.outputs.beta_group_id }}
+      BUILD_NUMBER: ${{ needs.preflight.outputs.build_number }}
+      IOS_BUNDLE_ID: ${{ needs.preflight.outputs.bundle_id }}
+      LISTING_PLATFORM: ${{ needs.preflight.outputs.platform }}
+      MARKETING_VERSION: ${{ needs.preflight.outputs.marketing_version }}
+    steps:
+      - name: Check out delivery helper
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.validated_sha }}
+
+      - name: Prepare short-lived App Store Connect key file
+        shell: bash
+        run: |
+          set -euo pipefail
+          key_path="$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8"
+          umask 077
+          printf '%s' "$ASC_PRIVATE_KEY" > "$key_path"
+          echo "ASC_KEY_PATH=$key_path" >> "$GITHUB_ENV"
+
+      - name: Deliver to tester group and attach to listing
+        shell: bash
+        run: ruby scripts/asc_delivery.rb
