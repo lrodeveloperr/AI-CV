@@ -26,3 +26,16 @@ The UI foundation is the audited [`lrodeveloperr/ios-18-shell`](https://github.c
 ## Product principle
 
 The app never lets generative AI silently change an employer, date, qualification, or other factual record. AI proposes wording; the user approves it; deterministic code owns the final document.
+
+## Engine
+
+The presentation-independent engine is a Swift package rooted at [`Package.swift`](Package.swift). Its targets mirror the locked architecture:
+
+- `CareerDomain`
+- `CareerWorkflow`
+- `DocumentEngine`
+- `PersistenceSync`
+- `AIImport`
+- `Purchases`
+
+The iOS 18 shell is intentionally not a package dependency of these targets. GitHub Actions runs the authoritative engine build and test suite from [`.github/workflows/engine-ci.yml`](.github/workflows/engine-ci.yml).
