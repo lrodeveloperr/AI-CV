@@ -118,3 +118,24 @@ private struct FixedWidthMeasurer: TextMeasurer {
     let expected = Set(employments.map { "employment.\($0.id.uuidString)" })
     #expect(employmentFieldIDs == expected)
 }
+
+@Test func nativeRendererProducesTheExactValidatedArtifact() async throws {
+    let snapshot = DocumentSnapshot(
+        documentID: UUID(),
+        kind: .resume,
+        templateID: "standard-ja-v1",
+        fields: [
+            .init(id: "name", section: .identity, text: "山田 太郎", isRequired: true),
+            .init(id: "summary", section: .narrative, text: "確認済みの職歴を記載します。")
+        ],
+        maximumPDFBytes: 1_000_000,
+        createdAt: Date(timeIntervalSince1970: 1_800_000_000)
+    )
+    let plan = try LayoutEngine(measurer: CoreTextMeasurer()).layout(snapshot)
+    let artifact = try await CoreGraphicsPDFRenderer().render(plan)
+    let validation = ExportValidator.validate(artifact: artifact, snapshot: snapshot, plan: plan)
+
+    #expect(artifact.data.starts(with: Data("%PDF".utf8)))
+    #expect(artifact.pageCount == plan.pages.count)
+    #expect(validation.isValid)
+}
