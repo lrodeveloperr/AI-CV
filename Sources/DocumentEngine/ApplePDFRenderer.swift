@@ -124,7 +124,7 @@ public struct CoreGraphicsPDFRenderer: DocumentRendering {
 
 /// ImageIO helpers shared by rendering and portrait preparation.
 enum PortraitCodec {
-    static let jpegType = "public.jpeg" as CFString
+    static var jpegType: CFString { "public.jpeg" as CFString }
 
     static func decode(_ data: Data) throws -> CGImage {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
