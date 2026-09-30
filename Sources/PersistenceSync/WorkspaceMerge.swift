@@ -222,6 +222,7 @@ public enum WorkspaceMerge {
                 losingRemote = true
             }
             document.narratives = narratives.merged
+            document.modifiedAt = max(l.modifiedAt, r.modifiedAt)
             conflicts += narratives.conflicts
             merged.append(document)
 
@@ -240,6 +241,7 @@ public enum WorkspaceMerge {
     private static func stripped(_ document: DocumentRecord) -> DocumentRecord {
         var copy = document
         copy.narratives = []
+        copy.modifiedAt = .distantPast
         return copy
     }
 
