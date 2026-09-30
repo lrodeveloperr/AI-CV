@@ -1,3 +1,4 @@
+import CareerDomain
 import Foundation
 
 /// Builds the minimal prompt packet for a writing task. Pure and deterministic
