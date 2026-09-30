@@ -10,6 +10,7 @@ public struct DocumentComposer: Sendable {
         application: JobApplication? = nil,
         maximumPDFBytes: Int,
         portraitBytes: Int = 0,
+        portrait: PortraitImage? = nil,
         createdAt: Date
     ) throws -> DocumentSnapshot {
         let issues = CareerValidator.validate(profile)
@@ -37,6 +38,7 @@ public struct DocumentComposer: Sendable {
             fields: fields,
             maximumPDFBytes: maximumPDFBytes,
             portraitBytes: portraitBytes,
+            portrait: portrait,
             createdAt: createdAt
         )
     }

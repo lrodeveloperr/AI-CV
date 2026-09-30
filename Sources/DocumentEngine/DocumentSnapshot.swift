@@ -95,6 +95,18 @@ public struct PageSpec: Codable, Equatable, Sendable {
     public var contentHeight: Double { height - topMargin - bottomMargin }
 }
 
+public struct PortraitImage: Codable, Equatable, Sendable {
+    public let data: Data
+    public let pixelWidth: Int
+    public let pixelHeight: Int
+
+    public init(data: Data, pixelWidth: Int, pixelHeight: Int) {
+        self.data = data
+        self.pixelWidth = pixelWidth
+        self.pixelHeight = pixelHeight
+    }
+}
+
 public struct DocumentSnapshot: Identifiable, Codable, Equatable, Sendable {
     public let id: UUID
     public let documentID: UUID
@@ -104,6 +116,7 @@ public struct DocumentSnapshot: Identifiable, Codable, Equatable, Sendable {
     public let fields: [DocumentField]
     public let maximumPDFBytes: Int
     public let portraitBytes: Int
+    public let portrait: PortraitImage?
     public let createdAt: Date
 
     public init(
@@ -115,6 +128,7 @@ public struct DocumentSnapshot: Identifiable, Codable, Equatable, Sendable {
         fields: [DocumentField],
         maximumPDFBytes: Int,
         portraitBytes: Int = 0,
+        portrait: PortraitImage? = nil,
         createdAt: Date
     ) {
         self.id = id
@@ -124,7 +138,8 @@ public struct DocumentSnapshot: Identifiable, Codable, Equatable, Sendable {
         self.page = page
         self.fields = fields
         self.maximumPDFBytes = maximumPDFBytes
-        self.portraitBytes = portraitBytes
+        self.portraitBytes = portrait?.data.count ?? portraitBytes
+        self.portrait = portrait
         self.createdAt = createdAt
     }
 
@@ -134,6 +149,10 @@ public struct DocumentSnapshot: Identifiable, Codable, Equatable, Sendable {
         hasher.combine(kind.rawValue)
         hasher.combine(templateID)
         hasher.combine(String(maximumPDFBytes))
+        if let portrait {
+            hasher.combine(data: portrait.data)
+            hasher.combine("\(portrait.pixelWidth)x\(portrait.pixelHeight)")
+        }
         for field in fields {
             hasher.combine(field.id)
             hasher.combine(field.section.rawValue)
@@ -147,6 +166,15 @@ public struct DocumentSnapshot: Identifiable, Codable, Equatable, Sendable {
 
 struct StableHasher {
     private(set) var value: UInt64 = 14_695_981_039_346_656_037
+
+    mutating func combine(data: Data) {
+        for byte in data {
+            value ^= UInt64(byte)
+            value &*= 1_099_511_628_211
+        }
+        value ^= 0xFE
+        value &*= 1_099_511_628_211
+    }
 
     mutating func combine(_ string: String) {
         for byte in string.utf8 {

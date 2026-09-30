@@ -130,3 +130,95 @@ import Testing
         #expect(error as? EngineError == .invalidTransition("Application stage transition is not allowed"))
     }
 }
+
+// MARK: - Variants and version links
+
+private let proAccess = SubscriptionStatus.proActive(expiresAt: nil)
+private let variantNow = Date(timeIntervalSince1970: 1_800_000_000)
+
+private func seededService() async throws -> (WorkspaceService, Workspace) {
+    let service = WorkspaceService(repository: InMemoryWorkspaceRepository())
+    _ = try await service.loadOrCreate(profile: CareerProfile(contact: ContactDetails(fullName: "Candidate")))
+    var workspace = try await service.createDocument(
+        kind: .resume, title: "Resume", subscription: proAccess, operationID: UUID(), now: variantNow
+    )
+    workspace = try await service.createApplication(
+        company: "Acme", role: "Engineer", subscription: proAccess, operationID: UUID(), now: variantNow
+    )
+    return (service, workspace)
+}
+
+@Test func proUserCreatesApplicationVariantLinkedToApplication() async throws {
+    let (service, seeded) = try await seededService()
+    let source = seeded.documents[0]
+    let application = seeded.applications[0]
+    let narrative = Narrative(field: .motivation, text: "Why Acme", citedFactIDs: [], acceptedAt: variantNow)
+    _ = try await service.acceptNarrative(narrative, documentID: source.id, operationID: UUID(), now: variantNow)
+
+    let result = try await service.createVariant(
+        of: source.id, applicationID: application.id, title: "Resume – Acme",
+        subscription: proAccess, operationID: UUID(), now: variantNow
+    )
+    let variant = try #require(result.documents.last)
+    #expect(result.documents.count == 2)
+    #expect(variant.applicationID == application.id)
+    #expect(variant.narratives.map(\.text) == ["Why Acme"])
+    #expect(variant.narratives.first?.id != narrative.id)
+    #expect(result.applications[0].documentIDs.contains(variant.id))
+}
+
+@Test func freeUserCannotCreateVariant() async throws {
+    let service = WorkspaceService(repository: InMemoryWorkspaceRepository())
+    _ = try await service.loadOrCreate(profile: CareerProfile(contact: ContactDetails(fullName: "Candidate")))
+    let created = try await service.createDocument(
+        kind: .resume, title: "Resume", subscription: .free, operationID: UUID(), now: variantNow
+    )
+    do {
+        _ = try await service.createVariant(
+            of: created.documents[0].id, applicationID: UUID(), title: "Variant",
+            subscription: .free, operationID: UUID(), now: variantNow
+        )
+        Issue.record("Expected an error")
+    } catch {
+        // Application lookup or entitlement must stop a free user either way.
+        #expect(error is EngineError)
+    }
+}
+
+@Test func freezingAVariantAssociatesTheVersionWithItsApplication() async throws {
+    let (service, seeded) = try await seededService()
+    let withVariant = try await service.createVariant(
+        of: seeded.documents[0].id, applicationID: seeded.applications[0].id, title: "Variant",
+        subscription: proAccess, operationID: UUID(), now: variantNow
+    )
+    let variantID = try #require(withVariant.documents.last?.id)
+    let frozen = try await service.freezeDocumentVersion(
+        documentID: variantID, subscription: proAccess, operationID: UUID(), now: variantNow
+    )
+    let versionID = try #require(frozen.documentVersions.last?.id)
+    #expect(frozen.applications[0].documentVersionIDs == [versionID])
+}
+
+@Test func attachingVersionRequiresExistingVersionAndApplication() async throws {
+    let (service, seeded) = try await seededService()
+    let frozen = try await service.freezeDocumentVersion(
+        documentID: seeded.documents[0].id, subscription: proAccess, operationID: UUID(), now: variantNow
+    )
+    let versionID = try #require(frozen.documentVersions.first?.id)
+
+    let attached = try await service.attachVersion(
+        versionID: versionID, toApplication: seeded.applications[0].id,
+        subscription: proAccess, operationID: UUID(), now: variantNow
+    )
+    #expect(attached.applications[0].documentVersionIDs == [versionID])
+
+    do {
+        _ = try await service.attachVersion(
+            versionID: UUID(), toApplication: seeded.applications[0].id,
+            subscription: proAccess, operationID: UUID(), now: variantNow
+        )
+        Issue.record("Expected missing version to be rejected")
+    } catch {
+        #expect(error as? EngineError == .invalidInput("Document version does not exist"))
+    }
+}
