@@ -17,7 +17,8 @@ let package = Package(
                 "DocumentEngine",
                 "PersistenceSync",
                 "AIImport",
-                "Purchases"
+                "Purchases",
+                "NativeServices"
             ]
         )
     ],
@@ -42,6 +43,14 @@ let package = Package(
         .target(
             name: "Purchases",
             dependencies: ["CareerDomain"]
+        ),
+        .target(
+            name: "NativeServices",
+            dependencies: ["CareerDomain", "CareerWorkflow", "DocumentEngine"]
+        ),
+        .testTarget(
+            name: "NativeServicesTests",
+            dependencies: ["CareerDomain", "CareerWorkflow", "DocumentEngine", "NativeServices"]
         ),
         .testTarget(
             name: "CareerDomainTests",

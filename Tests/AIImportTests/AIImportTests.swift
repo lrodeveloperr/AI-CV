@@ -1,6 +1,9 @@
 import AIImport
 import CareerDomain
+import CoreGraphics
+import CoreText
 import Foundation
+import ImageIO
 import Testing
 
 @Test func aiSuggestionAcceptsOnlySuppliedFactsAndNumbers() throws {
@@ -236,3 +239,85 @@ private func sampleRequest(factID: UUID) -> AIWritingRequest {
     _ = try AIWritingValidator(requiredScript: .japanese(minimumRatio: 0.5))
         .validate(draft, against: sampleRequest(factID: factID), acceptedAt: Date())
 }
+
+
+// MARK: - Prompt packet
+
+@Test func promptContainsOnlySuppliedFactsAndLimits() {
+    let factID = UUID()
+    let request = AIWritingRequest(
+        field: .motivation,
+        operation: .shorten,
+        facts: [.init(id: factID, label: "Employer", value: "株式会社サンプル")],
+        existingText: "既存の文章",
+        vacancyText: "募集要項",
+        maximumCharacters: 120
+    )
+    let prompt = AIPromptBuilder.prompt(for: request)
+    #expect(prompt.contains("[\(factID.uuidString)] Employer: 株式会社サンプル"))
+    #expect(prompt.contains("Maximum length: 120 characters"))
+    #expect(prompt.contains("既存の文章"))
+    #expect(prompt.contains("募集要項"))
+    #expect(AIPromptBuilder.instructions.contains("Do not add, change, or guess facts"))
+}
+
+@Test func promptOmitsAbsentOptionalSections() {
+    let request = AIWritingRequest(field: .selfPromotion, operation: .draft, facts: [], maximumCharacters: 50)
+    let prompt = AIPromptBuilder.prompt(for: request)
+    #expect(!prompt.contains("Existing text"))
+    #expect(!prompt.contains("Vacancy text"))
+}
+
+// MARK: - Vision adapter
+
+private func textImagePNG(_ text: String) -> Data {
+    let width = 1_200, height = 300
+    let context = CGContext(
+        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+    )!
+    context.setFillColor(gray: 1, alpha: 1)
+    context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+    context.setFillColor(gray: 0, alpha: 1)
+    let font = CTFontCreateWithName("Helvetica-Bold" as CFString, 120, nil)
+    let attributed = NSAttributedString(string: text, attributes: [
+        NSAttributedString.Key(kCTFontAttributeName as String): font
+    ])
+    let line = CTLineCreateWithAttributedString(attributed as CFAttributedString)
+    context.textPosition = CGPoint(x: 40, y: 100)
+    CTLineDraw(line, context)
+    let output = NSMutableData()
+    let destination = CGImageDestinationCreateWithData(output, "public.png" as CFString, 1, nil)!
+    CGImageDestinationAddImage(destination, context.makeImage()!, nil)
+    CGImageDestinationFinalize(destination)
+    return output as Data
+}
+
+#if canImport(Vision)
+@Test func visionServiceRecognizesTextWithConfidenceAndBoundingBox() async throws {
+    let lines = try await VisionTextRecognitionService().recognize(pages: [textImagePNG("RESUME 2020")])
+    let joined = lines.map(\.text).joined(separator: " ").uppercased()
+    #expect(joined.contains("RESUME"))
+    let first = try #require(lines.first)
+    #expect(first.pageIndex == 0)
+    #expect(first.confidence > 0)
+    #expect(first.boundingBox != nil)
+}
+
+@Test func visionServiceTagsEachPageIndex() async throws {
+    let lines = try await VisionTextRecognitionService().recognize(
+        pages: [textImagePNG("FIRST"), textImagePNG("SECOND")]
+    )
+    #expect(lines.contains { $0.pageIndex == 0 })
+    #expect(lines.contains { $0.pageIndex == 1 })
+}
+
+@Test func visionServiceRejectsUnreadableImage() async {
+    do {
+        _ = try await VisionTextRecognitionService().recognize(pages: [Data([1, 2, 3])])
+        Issue.record("Expected an unreadable page to fail")
+    } catch {
+        #expect(error as? EngineError == .unavailable("Text recognition could not process the page"))
+    }
+}
+#endif

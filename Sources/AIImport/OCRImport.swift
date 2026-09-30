@@ -1,15 +1,32 @@
 import CareerDomain
 import Foundation
 
+/// Bounding box in normalized page coordinates (origin bottom-left, 0...1).
+public struct NormalizedRect: Codable, Equatable, Sendable {
+    public let x: Double
+    public let y: Double
+    public let width: Double
+    public let height: Double
+
+    public init(x: Double, y: Double, width: Double, height: Double) {
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+    }
+}
+
 public struct RecognizedTextLine: Codable, Equatable, Sendable {
     public let text: String
     public let confidence: Double
     public let pageIndex: Int
+    public let boundingBox: NormalizedRect?
 
-    public init(text: String, confidence: Double, pageIndex: Int) {
+    public init(text: String, confidence: Double, pageIndex: Int, boundingBox: NormalizedRect? = nil) {
         self.text = text
         self.confidence = confidence
         self.pageIndex = pageIndex
+        self.boundingBox = boundingBox
     }
 }
 
