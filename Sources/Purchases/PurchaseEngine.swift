@@ -74,30 +74,62 @@ public enum EntitlementResolver {
     }
 }
 
+public protocol EntitlementCache: Sendable {
+    func load() async -> [VerifiedSubscription]
+    func store(_ subscriptions: [VerifiedSubscription]) async
+}
+
+public actor InMemoryEntitlementCache: EntitlementCache {
+    private var stored: [VerifiedSubscription]
+
+    public init(_ initial: [VerifiedSubscription] = []) {
+        self.stored = initial
+    }
+
+    public func load() async -> [VerifiedSubscription] { stored }
+    public func store(_ subscriptions: [VerifiedSubscription]) async { stored = subscriptions }
+}
+
 public actor PurchaseEngine {
     public static let monthlyProductID = "com.worksbienstudios.rirekishoai.pro.monthly"
     public static let annualProductID = "com.worksbienstudios.rirekishoai.pro.annual"
     public static let productIDs: Set<String> = [monthlyProductID, annualProductID]
 
     private let client: any PurchaseClient
+    private let cache: (any EntitlementCache)?
+    private var verified: [VerifiedSubscription] = []
     public private(set) var products: [StoreProductInfo] = []
     public private(set) var entitlement: SubscriptionStatus = .free
 
-    public init(client: any PurchaseClient) {
+    public init(client: any PurchaseClient, cache: (any EntitlementCache)? = nil) {
         self.client = client
+        self.cache = cache
     }
 
+    /// Presents the last verified entitlement for fast launch. StoreKit
+    /// reconciliation via `refresh` remains authoritative.
+    @discardableResult
+    public func restoreFromCache(now: Date) async -> SubscriptionStatus {
+        if let cache {
+            verified = await cache.load()
+            entitlement = EntitlementResolver.resolve(
+                subscriptions: verified,
+                recognizedProductIDs: Self.productIDs,
+                now: now
+            )
+        }
+        return entitlement
+    }
+
+    /// An unavailable App Store never erases an entitlement that was already
+    /// verified: on failure the current state is kept and the error rethrown.
     @discardableResult
     public func refresh(now: Date) async throws -> SubscriptionStatus {
-        async let loadedProducts = client.products(for: Self.productIDs)
-        async let subscriptions = client.currentSubscriptions()
-        let (products, current) = try await (loadedProducts, subscriptions)
-        self.products = products.sorted { $0.id < $1.id }
-        entitlement = EntitlementResolver.resolve(
-            subscriptions: current,
-            recognizedProductIDs: Self.productIDs,
-            now: now
-        )
+        if let loaded = try? await client.products(for: Self.productIDs) {
+            products = loaded.sorted { $0.id < $1.id }
+        }
+        let current = try await client.currentSubscriptions()
+        await commit(current, now: now)
         return entitlement
     }
 
@@ -107,20 +139,23 @@ public actor PurchaseEngine {
         }
         let outcome = try await client.purchase(productID: productID)
         if case .purchased(let subscription) = outcome {
-            entitlement = EntitlementResolver.resolve(
-                subscriptions: [subscription],
-                recognizedProductIDs: Self.productIDs,
-                now: now
-            )
+            let others = verified.filter { $0.productID != subscription.productID }
+            await commit(others + [subscription], now: now)
         }
         return outcome
     }
 
-    public func ingest(_ subscriptions: [VerifiedSubscription], now: Date) {
+    public func ingest(_ subscriptions: [VerifiedSubscription], now: Date) async {
+        await commit(subscriptions, now: now)
+    }
+
+    private func commit(_ subscriptions: [VerifiedSubscription], now: Date) async {
+        verified = subscriptions
         entitlement = EntitlementResolver.resolve(
             subscriptions: subscriptions,
             recognizedProductIDs: Self.productIDs,
             now: now
         )
+        await cache?.store(subscriptions)
     }
 }

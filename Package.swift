@@ -6,7 +6,7 @@ let package = Package(
     name: "AICVEngine",
     platforms: [
         .iOS(.v18),
-        .macOS(.v13)
+        .macOS(.v14)
     ],
     products: [
         .library(
@@ -33,7 +33,7 @@ let package = Package(
         ),
         .target(
             name: "PersistenceSync",
-            dependencies: ["CareerDomain"]
+            dependencies: ["CareerDomain", "CareerWorkflow"]
         ),
         .target(
             name: "AIImport",
@@ -57,7 +57,7 @@ let package = Package(
         ),
         .testTarget(
             name: "PersistenceSyncTests",
-            dependencies: ["CareerDomain", "PersistenceSync"]
+            dependencies: ["CareerDomain", "CareerWorkflow", "PersistenceSync"]
         ),
         .testTarget(
             name: "AIImportTests",
