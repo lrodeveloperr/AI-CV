@@ -149,3 +149,83 @@ private func makeWorkspace(
     let result = WorkspaceMerge.merge(base: makeWorkspace(), local: local, remote: remote)
     #expect(result.workspace.usage.completedExportOperationIDs == [first, second])
 }
+
+// MARK: - Record mapping and SwiftData store
+
+private func richWorkspace() throws -> Workspace {
+    let employment = Employment(
+        employer: "株式会社サンプル",
+        start: try PartialDate(year: 2015, month: 4),
+        responsibilities: ["営業"]
+    )
+    let education = Education(school: "東京大学", start: try PartialDate(year: 2010, month: 4))
+    let document = DocumentRecord(kind: .resume, title: "Resume", createdAt: t0, modifiedAt: t0)
+    var workspace = Workspace(
+        profile: CareerProfile(
+            contact: ContactDetails(fullName: "山田 太郎", email: "a@example.com"),
+            education: [education],
+            employment: [employment, Employment(employer: "Second")]
+        ),
+        documents: [document],
+        applications: [JobApplication(company: "C", role: "R", modifiedAt: t0)]
+    )
+    workspace.usage.recordCompletedExport(operationID: UUID())
+    workspace.processedOperationIDs.insert(UUID())
+    return workspace
+}
+
+@Test func mapperRoundTripsWorkspaceIncludingOrderAndLedger() throws {
+    let workspace = try richWorkspace()
+    let drafts = try WorkspaceMapper.drafts(from: workspace)
+    #expect(try WorkspaceMapper.workspace(from: drafts.reversed(), revision: 0) == workspace)
+}
+
+@Test func mapperRejectsWorkspaceWithoutProfileRecord() {
+    do {
+        _ = try WorkspaceMapper.workspace(from: [], revision: 0)
+        Issue.record("Expected corrupt data")
+    } catch {
+        #expect(error as? EngineError == .corruptData("Stored workspace has no profile record"))
+    }
+}
+
+@Test func swiftDataRepositoryRoundTripsAndBumpsRevision() async throws {
+    let container = try PersistenceContainerFactory.makeContainer(inMemory: true)
+    let repository = SwiftDataWorkspaceRepository(modelContainer: container)
+    #expect(try await repository.load() == nil)
+
+    let workspace = try richWorkspace()
+    let saved = try await repository.save(workspace, expectedRevision: 0)
+    #expect(saved.revision == 1)
+
+    var expected = workspace
+    expected.revision = 1
+    #expect(try await repository.load() == expected)
+}
+
+@Test func swiftDataRepositoryRejectsStaleRevision() async throws {
+    let container = try PersistenceContainerFactory.makeContainer(inMemory: true)
+    let repository = SwiftDataWorkspaceRepository(modelContainer: container)
+    _ = try await repository.save(try richWorkspace(), expectedRevision: 0)
+    do {
+        _ = try await repository.save(try richWorkspace(), expectedRevision: 0)
+        Issue.record("Expected a revision conflict")
+    } catch {
+        #expect(error as? EngineError == .conflict(expected: 0, actual: 1))
+    }
+}
+
+@Test func swiftDataRepositoryRemovesDeletedRecordsAndReportsCounts() async throws {
+    let container = try PersistenceContainerFactory.makeContainer(inMemory: true)
+    let repository = SwiftDataWorkspaceRepository(modelContainer: container)
+    var workspace = try await repository.save(try richWorkspace(), expectedRevision: 0)
+    #expect(try await repository.diagnostics().recordCounts["employment"] == 2)
+
+    workspace.profile.employment.removeFirst()
+    let saved = try await repository.save(workspace, expectedRevision: workspace.revision)
+    #expect(saved.profile.employment.count == 1)
+    #expect(try await repository.load()?.profile.employment.count == 1)
+    let diagnostics = try await repository.diagnostics()
+    #expect(diagnostics.recordCounts["employment"] == 1)
+    #expect(diagnostics.revision == 2)
+}
