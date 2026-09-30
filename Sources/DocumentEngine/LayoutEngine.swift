@@ -45,6 +45,16 @@ public struct TextPlacement: Codable, Equatable, Sendable {
     }
 }
 
+public struct PortraitPlacement: Codable, Equatable, Sendable {
+    public let frame: LayoutRect
+    public let image: PortraitImage
+
+    public init(frame: LayoutRect, image: PortraitImage) {
+        self.frame = frame
+        self.image = image
+    }
+}
+
 public struct PageLayout: Codable, Equatable, Sendable {
     public let index: Int
     public var textPlacements: [TextPlacement]
@@ -61,6 +71,7 @@ public struct LayoutIssue: Codable, Equatable, Sendable {
         case emptyMeasurement
         case unsplittableField
         case unplacedField
+        case portraitTooSmall
     }
 
     public let code: Code
@@ -79,12 +90,21 @@ public struct LayoutPlan: Codable, Equatable, Sendable {
     public let pageSpec: PageSpec
     public let pages: [PageLayout]
     public let issues: [LayoutIssue]
+    /// Always drawn on page 0.
+    public let portrait: PortraitPlacement?
 
-    public init(snapshotHash: UInt64, pageSpec: PageSpec, pages: [PageLayout], issues: [LayoutIssue]) {
+    public init(
+        snapshotHash: UInt64,
+        pageSpec: PageSpec,
+        pages: [PageLayout],
+        issues: [LayoutIssue],
+        portrait: PortraitPlacement? = nil
+    ) {
         self.snapshotHash = snapshotHash
         self.pageSpec = pageSpec
         self.pages = pages
         self.issues = issues
+        self.portrait = portrait
     }
 
     public var placedFieldIDs: Set<String> {
@@ -95,6 +115,13 @@ public struct LayoutPlan: Codable, Equatable, Sendable {
 }
 
 public struct LayoutEngine: Sendable {
+    /// Standard 30 mm x 40 mm résumé photo, in points.
+    public static let portraitWidth = 85.04
+    public static let portraitHeight = 113.39
+    public static let portraitGap = 12.0
+    public static let minimumPortraitPixelWidth = 240
+    public static let minimumPortraitPixelHeight = 320
+
     private let measurer: any TextMeasurer
 
     public init(measurer: any TextMeasurer) {
@@ -107,6 +134,29 @@ public struct LayoutEngine: Sendable {
         var y = snapshot.page.topMargin
         var issues: [LayoutIssue] = []
 
+        var portraitPlacement: PortraitPlacement?
+        if let image = snapshot.portrait {
+            if image.pixelWidth < Self.minimumPortraitPixelWidth
+                || image.pixelHeight < Self.minimumPortraitPixelHeight {
+                issues.append(.init(
+                    code: .portraitTooSmall,
+                    fieldID: "portrait",
+                    message: "Portrait resolution is below the \(Self.minimumPortraitPixelWidth)x\(Self.minimumPortraitPixelHeight) pixel minimum"
+                ))
+            }
+            portraitPlacement = PortraitPlacement(
+                frame: LayoutRect(
+                    x: snapshot.page.width - snapshot.page.rightMargin - Self.portraitWidth,
+                    y: snapshot.page.topMargin,
+                    width: Self.portraitWidth,
+                    height: Self.portraitHeight
+                ),
+                image: image
+            )
+        }
+        let portraitBottom = portraitPlacement.map { $0.frame.y + $0.frame.height + Self.portraitGap }
+        let narrowWidth = snapshot.page.contentWidth - Self.portraitWidth - Self.portraitGap
+
         for field in snapshot.fields {
             let normalized = field.text.trimmingCharacters(in: .whitespacesAndNewlines)
             if field.isRequired && normalized.isEmpty {
@@ -115,7 +165,10 @@ public struct LayoutEngine: Sendable {
             }
             if normalized.isEmpty { continue }
 
-            let lines = try measurer.measure(text: normalized, style: field.style, width: snapshot.page.contentWidth)
+            // Text that starts beside the portrait wraps in the narrower column.
+            let besidePortrait = pageIndex == 0 && (portraitBottom.map { y < $0 } ?? false)
+            let width = besidePortrait ? narrowWidth : snapshot.page.contentWidth
+            let lines = try measurer.measure(text: normalized, style: field.style, width: width)
             guard !lines.isEmpty else {
                 issues.append(.init(code: .emptyMeasurement, fieldID: field.id, message: "Text measurement produced no lines"))
                 continue
@@ -145,7 +198,7 @@ public struct LayoutEngine: Sendable {
                 let frame = LayoutRect(
                     x: snapshot.page.leftMargin,
                     y: y,
-                    width: snapshot.page.contentWidth,
+                    width: width,
                     height: line.height
                 )
                 pages[pageIndex].textPlacements.append(.init(
@@ -170,7 +223,8 @@ public struct LayoutEngine: Sendable {
             snapshotHash: snapshot.stableContentHash,
             pageSpec: snapshot.page,
             pages: pages,
-            issues: issues
+            issues: issues,
+            portrait: portraitPlacement
         )
     }
 }

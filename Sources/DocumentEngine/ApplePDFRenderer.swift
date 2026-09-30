@@ -2,6 +2,7 @@ import CareerDomain
 import CoreGraphics
 import CoreText
 import Foundation
+import ImageIO
 
 public struct CoreTextMeasurer: TextMeasurer {
     public init() {}
@@ -49,6 +50,10 @@ public struct CoreGraphicsPDFRenderer: DocumentRendering {
     public init() {}
 
     public func render(_ plan: LayoutPlan) async throws -> RenderedDocument {
+        try renderPDF(plan, portraitQuality: SizeBudgetRenderer.normalQuality)
+    }
+
+    func renderPDF(_ plan: LayoutPlan, portraitQuality: Double) throws -> RenderedDocument {
         guard plan.canRender else {
             throw EngineError.validation(plan.issues.map { issue in
                 ValidationIssue(
@@ -74,10 +79,23 @@ public struct CoreGraphicsPDFRenderer: DocumentRendering {
             throw EngineError.internalFailure("Unable to create PDF context")
         }
 
+        let portraitImage = try plan.portrait.map {
+            try PortraitCodec.recompressed($0.image.data, quality: portraitQuality)
+        }
+
         for page in plan.pages {
             context.beginPDFPage(nil)
             context.setFillColor(gray: 0, alpha: 1)
             context.textMatrix = .identity
+            if page.index == 0, let portraitImage, let placement = plan.portrait {
+                let frame = placement.frame
+                context.draw(portraitImage, in: CGRect(
+                    x: CGFloat(frame.x),
+                    y: CGFloat(plan.pageSpec.height - frame.y - frame.height),
+                    width: CGFloat(frame.width),
+                    height: CGFloat(frame.height)
+                ))
+            }
             for placement in page.textPlacements {
                 let attributed = NSAttributedString(
                     string: placement.text,
@@ -101,5 +119,43 @@ public struct CoreGraphicsPDFRenderer: DocumentRendering {
             snapshotHash: plan.snapshotHash,
             pageCount: plan.pages.count
         )
+    }
+}
+
+/// ImageIO helpers shared by rendering and portrait preparation.
+enum PortraitCodec {
+    static let jpegType = "public.jpeg" as CFString
+
+    static func decode(_ data: Data) throws -> CGImage {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+            throw EngineError.validation([ValidationIssue(
+                code: "portrait.unreadable",
+                message: "The portrait image could not be read",
+                path: "document.portrait",
+                severity: .blocking
+            )])
+        }
+        return image
+    }
+
+    static func encodeJPEG(_ image: CGImage, quality: Double) throws -> Data {
+        let output = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(output as CFMutableData, jpegType, 1, nil) else {
+            throw EngineError.internalFailure("Unable to create portrait encoder")
+        }
+        CGImageDestinationAddImage(destination, image, [
+            kCGImageDestinationLossyCompressionQuality: quality
+        ] as CFDictionary)
+        guard CGImageDestinationFinalize(destination) else {
+            throw EngineError.internalFailure("Portrait encoding failed")
+        }
+        return output as Data
+    }
+
+    /// Re-encodes the portrait at the given JPEG quality and decodes it again,
+    /// so the drawn pixels match what the quality setting produces.
+    static func recompressed(_ data: Data, quality: Double) throws -> CGImage {
+        try decode(encodeJPEG(decode(data), quality: quality))
     }
 }

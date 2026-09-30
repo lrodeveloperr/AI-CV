@@ -237,3 +237,42 @@ private func richWorkspace() throws -> Workspace {
     let map = try String(contentsOf: root.appendingPathComponent(".github/testflight-app-map.json"), encoding: .utf8)
     #expect(map.contains("\"bundle_id\": \"\(PersistenceContainerFactory.bundleIdentifier)\""))
 }
+
+// MARK: - Sync status
+
+@Test func syncStatusNeverClaimsSyncedWithoutConfirmation() {
+    #expect(SyncStatusResolver.resolve(.init(iCloudAccountAvailable: true)) == .savedLocally)
+    #expect(SyncStatusResolver.resolve(.init(iCloudAccountAvailable: false)) == .iCloudUnavailable)
+    #expect(SyncStatusResolver.resolve(.init(iCloudAccountAvailable: true, exportInProgress: true)) == .syncing)
+    #expect(SyncStatusResolver.resolve(.init(iCloudAccountAvailable: true, lastSuccessfulSync: t0)) == .synced(t0))
+    #expect(SyncStatusResolver.resolve(.init(
+        iCloudAccountAvailable: true, hasUnsyncedLocalChanges: true, lastSuccessfulSync: t0
+    )) == .savedLocally)
+    #expect(SyncStatusResolver.resolve(.init(
+        iCloudAccountAvailable: true, lastSuccessfulSync: t0, lastSyncFailed: true
+    )) == .savedLocally)
+}
+
+@Test func conflictsOutrankEveryOtherSyncState() {
+    let observation = SyncObservation(
+        iCloudAccountAvailable: false, exportInProgress: true, lastSuccessfulSync: t0, unresolvedConflictCount: 1
+    )
+    #expect(SyncStatusResolver.resolve(observation) == .conflictRequiresReview)
+}
+
+@Test func mergeConflictsSurfaceAsReviewRequiredStatus() {
+    let original = Employment(employer: "Acme")
+    var local = original
+    local.employer = "Acme Japan"
+    var remote = original
+    remote.employer = "Acme Holdings"
+    let merge = WorkspaceMerge.merge(
+        base: makeWorkspace(employment: [original]),
+        local: makeWorkspace(employment: [local]),
+        remote: makeWorkspace(employment: [remote])
+    )
+    let observation = SyncStatusResolver.observation(
+        .init(iCloudAccountAvailable: true, lastSuccessfulSync: t0), applying: merge
+    )
+    #expect(SyncStatusResolver.resolve(observation) == .conflictRequiresReview)
+}

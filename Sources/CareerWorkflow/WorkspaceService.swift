@@ -114,12 +114,100 @@ public actor WorkspaceService {
         guard blocking.isEmpty else { throw EngineError.validation(blocking) }
 
         let expectedRevision = workspace.revision
-        workspace.documentVersions.append(DocumentVersion(
+        let version = DocumentVersion(
             documentID: documentID,
             profile: workspace.profile,
             document: document,
             createdAt: now
-        ))
+        )
+        workspace.documentVersions.append(version)
+        // A version frozen for an application is associated with it.
+        if let applicationID = document.applicationID,
+           let index = workspace.applications.firstIndex(where: { $0.id == applicationID }) {
+            workspace.applications[index].documentVersionIDs.insert(version.id)
+            workspace.applications[index].modifiedAt = now
+        }
+        workspace.processedOperationIDs.insert(operationID)
+        return try await repository.save(workspace, expectedRevision: expectedRevision)
+    }
+
+    /// Duplicates a document as an application-specific variant. Factual
+    /// sections keep reading the canonical profile; only narratives are copied.
+    public func createVariant(
+        of documentID: UUID,
+        applicationID: UUID,
+        title: String,
+        subscription: SubscriptionStatus,
+        operationID: UUID,
+        now: Date
+    ) async throws -> Workspace {
+        var workspace = try await requireWorkspace()
+        if workspace.processedOperationIDs.contains(operationID) { return workspace }
+        guard let source = workspace.documents.first(where: { $0.id == documentID }) else {
+            throw EngineError.invalidInput("Document does not exist")
+        }
+        guard let applicationIndex = workspace.applications.firstIndex(where: { $0.id == applicationID }) else {
+            throw EngineError.invalidInput("Application does not exist")
+        }
+        let gate = FeatureGate(subscription: subscription, now: now)
+        guard gate.canCreate(source.kind, existing: workspace.documents) else {
+            let feature: Feature = switch source.kind {
+            case .resume: .createResume
+            case .workHistory: .createWorkHistory
+            case .coverLetter: .createCoverLetter
+            }
+            throw EngineError.entitlementRequired(feature)
+        }
+        guard gate.allows(.applicationTracking, usage: workspace.usage) else {
+            throw EngineError.entitlementRequired(.applicationTracking)
+        }
+
+        let normalizedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedTitle.isEmpty else {
+            throw EngineError.invalidInput("Variant title is required")
+        }
+        let expectedRevision = workspace.revision
+        let variant = DocumentRecord(
+            kind: source.kind,
+            title: normalizedTitle,
+            templateID: source.templateID,
+            dateStyle: source.dateStyle,
+            narratives: source.narratives.map {
+                Narrative(field: $0.field, text: $0.text, citedFactIDs: $0.citedFactIDs, acceptedAt: $0.acceptedAt)
+            },
+            applicationID: applicationID,
+            createdAt: now,
+            modifiedAt: now
+        )
+        workspace.documents.append(variant)
+        workspace.applications[applicationIndex].documentIDs.insert(variant.id)
+        workspace.applications[applicationIndex].modifiedAt = now
+        workspace.processedOperationIDs.insert(operationID)
+        return try await repository.save(workspace, expectedRevision: expectedRevision)
+    }
+
+    public func attachVersion(
+        versionID: UUID,
+        toApplication applicationID: UUID,
+        subscription: SubscriptionStatus,
+        operationID: UUID,
+        now: Date
+    ) async throws -> Workspace {
+        var workspace = try await requireWorkspace()
+        if workspace.processedOperationIDs.contains(operationID) { return workspace }
+        let gate = FeatureGate(subscription: subscription, now: now)
+        guard gate.allows(.applicationTracking, usage: workspace.usage) else {
+            throw EngineError.entitlementRequired(.applicationTracking)
+        }
+        guard workspace.documentVersions.contains(where: { $0.id == versionID }) else {
+            throw EngineError.invalidInput("Document version does not exist")
+        }
+        guard let index = workspace.applications.firstIndex(where: { $0.id == applicationID }) else {
+            throw EngineError.invalidInput("Application does not exist")
+        }
+        let expectedRevision = workspace.revision
+        workspace.applications[index].documentVersionIDs.insert(versionID)
+        workspace.applications[index].modifiedAt = now
         workspace.processedOperationIDs.insert(operationID)
         return try await repository.save(workspace, expectedRevision: expectedRevision)
     }

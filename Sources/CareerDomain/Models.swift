@@ -292,6 +292,7 @@ public struct JobApplication: Identifiable, Codable, Equatable, Sendable {
     public var stage: ApplicationStage
     public var deadline: Date?
     public var documentIDs: Set<UUID>
+    public var documentVersionIDs: Set<UUID>
     public var modifiedAt: Date
 
     public init(
@@ -302,6 +303,7 @@ public struct JobApplication: Identifiable, Codable, Equatable, Sendable {
         stage: ApplicationStage = .preparing,
         deadline: Date? = nil,
         documentIDs: Set<UUID> = [],
+        documentVersionIDs: Set<UUID> = [],
         modifiedAt: Date
     ) {
         self.id = id
@@ -311,6 +313,7 @@ public struct JobApplication: Identifiable, Codable, Equatable, Sendable {
         self.stage = stage
         self.deadline = deadline
         self.documentIDs = documentIDs
+        self.documentVersionIDs = documentVersionIDs
         self.modifiedAt = modifiedAt
     }
 }

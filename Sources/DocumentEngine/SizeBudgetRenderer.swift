@@ -8,10 +8,8 @@ public protocol PortraitQualityRendering: Sendable {
 }
 
 extension CoreGraphicsPDFRenderer: PortraitQualityRendering {
-    /// The layout plan currently carries no portrait placement, so quality has
-    /// no effect on output yet; the size policy still measures real bytes.
     public func render(_ plan: LayoutPlan, portraitQuality: Double) async throws -> RenderedDocument {
-        try await render(plan)
+        try renderPDF(plan, portraitQuality: portraitQuality)
     }
 }
 
