@@ -209,3 +209,30 @@ private func sampleRequest(factID: UUID) -> AIWritingRequest {
         #expect(error as? EngineError == .canceled)
     }
 }
+
+// MARK: - Language check
+
+@Test func japaneseFieldRejectsNonJapaneseOutput() throws {
+    let factID = UUID()
+    let request = sampleRequest(factID: factID)
+    let validator = AIWritingValidator(requiredScript: .japanese(minimumRatio: 0.5))
+
+    let english = AIWritingDraft(proposedText: "Improved processing.", citedFactIDs: [factID])
+    do {
+        _ = try validator.validate(english, against: request, acceptedAt: Date())
+        Issue.record("Expected non-Japanese text to be rejected")
+    } catch {
+        #expect(error as? EngineError == .invalidInput("AI suggestion is not in the required language"))
+    }
+
+    let japanese = AIWritingDraft(proposedText: "業務の処理を改善しました。", citedFactIDs: [factID])
+    let narrative = try validator.validate(japanese, against: request, acceptedAt: Date())
+    #expect(narrative.text == "業務の処理を改善しました。")
+}
+
+@Test func japaneseCheckToleratesMixedLatinTerms() throws {
+    let factID = UUID()
+    let draft = AIWritingDraft(proposedText: "Swiftを用いたアプリ開発を担当しました。", citedFactIDs: [factID])
+    _ = try AIWritingValidator(requiredScript: .japanese(minimumRatio: 0.5))
+        .validate(draft, against: sampleRequest(factID: factID), acceptedAt: Date())
+}

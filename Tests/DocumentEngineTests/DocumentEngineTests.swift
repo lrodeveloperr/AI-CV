@@ -139,3 +139,70 @@ private struct FixedWidthMeasurer: TextMeasurer {
     #expect(artifact.pageCount == plan.pages.count)
     #expect(validation.isValid)
 }
+
+// MARK: - Size budget
+
+private struct QualitySizedRenderer: PortraitQualityRendering {
+    let sizeAtQuality: @Sendable (Double) -> Int
+
+    func render(_ plan: LayoutPlan, portraitQuality: Double) async throws -> RenderedDocument {
+        RenderedDocument(
+            data: Data(count: sizeAtQuality(portraitQuality)),
+            snapshotHash: plan.snapshotHash,
+            pageCount: plan.pages.count
+        )
+    }
+}
+
+private func budgetFixture(portraitBytes: Int, limit: Int) throws -> (DocumentSnapshot, LayoutPlan) {
+    let snapshot = DocumentSnapshot(
+        documentID: UUID(),
+        kind: .resume,
+        templateID: "standard-ja-v1",
+        fields: [.init(id: "name", section: .identity, text: "山田 太郎", isRequired: true)],
+        maximumPDFBytes: limit,
+        portraitBytes: portraitBytes,
+        createdAt: Date(timeIntervalSince1970: 1_800_000_000)
+    )
+    let plan = try LayoutEngine(measurer: FixedWidthMeasurer(charactersPerLine: 10)).layout(snapshot)
+    return (snapshot, plan)
+}
+
+@Test func sizeBudgetKeepsNormalQualityWhenWithinLimit() async throws {
+    let (snapshot, plan) = try budgetFixture(portraitBytes: 100, limit: 1_000)
+    let sized = try await SizeBudgetRenderer(renderer: QualitySizedRenderer { _ in 500 })
+        .render(snapshot: snapshot, plan: plan)
+    #expect(sized.attempts == 1)
+    #expect(sized.portraitQuality == SizeBudgetRenderer.normalQuality)
+}
+
+@Test func sizeBudgetRecompressesOnlyAsFarAsNeeded() async throws {
+    let (snapshot, plan) = try budgetFixture(portraitBytes: 100, limit: 1_000)
+    let renderer = QualitySizedRenderer { quality in Int(quality * 1_400) }
+    let sized = try await SizeBudgetRenderer(renderer: renderer).render(snapshot: snapshot, plan: plan)
+    #expect(sized.portraitQuality == 0.6)
+    #expect(sized.attempts == 3)
+    #expect(sized.document.data.count <= 1_000)
+}
+
+@Test func sizeBudgetBlocksExportWhenMinimumQualityStillTooLarge() async throws {
+    let (snapshot, plan) = try budgetFixture(portraitBytes: 100, limit: 1_000)
+    do {
+        _ = try await SizeBudgetRenderer(renderer: QualitySizedRenderer { _ in 5_000 })
+            .render(snapshot: snapshot, plan: plan)
+        Issue.record("Expected oversized output to be blocked")
+    } catch EngineError.validation(let issues) {
+        #expect(issues.first?.code == "pdf.size.exceeded")
+    }
+}
+
+@Test func sizeBudgetDoesNotRetryWithoutPortrait() async throws {
+    let (snapshot, plan) = try budgetFixture(portraitBytes: 0, limit: 1_000)
+    do {
+        _ = try await SizeBudgetRenderer(renderer: QualitySizedRenderer { _ in 5_000 })
+            .render(snapshot: snapshot, plan: plan)
+        Issue.record("Expected oversized output to be blocked")
+    } catch EngineError.validation(let issues) {
+        #expect(issues.first?.message.contains("1 attempt") == true)
+    }
+}

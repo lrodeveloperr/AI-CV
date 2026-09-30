@@ -61,7 +61,16 @@ public protocol AIWritingService: Sendable {
 }
 
 public struct AIWritingValidator: Sendable {
-    public init() {}
+    public enum RequiredScript: Equatable, Sendable {
+        /// At least `minimumRatio` of the letters must be kana or kanji.
+        case japanese(minimumRatio: Double)
+    }
+
+    private let requiredScript: RequiredScript?
+
+    public init(requiredScript: RequiredScript? = nil) {
+        self.requiredScript = requiredScript
+    }
 
     public func validate(
         _ draft: AIWritingDraft,
@@ -74,6 +83,9 @@ public struct AIWritingValidator: Sendable {
         }
         guard text.count <= request.maximumCharacters else {
             throw EngineError.invalidInput("AI suggestion exceeds the field limit")
+        }
+        if let requiredScript, !Self.satisfies(requiredScript, text: text) {
+            throw EngineError.invalidInput("AI suggestion is not in the required language")
         }
         let allowedIDs = Set(request.facts.map(\.id))
         guard draft.citedFactIDs.isSubset(of: allowedIDs) else {
@@ -95,6 +107,25 @@ public struct AIWritingValidator: Sendable {
             citedFactIDs: draft.citedFactIDs,
             acceptedAt: acceptedAt
         )
+    }
+
+    static func satisfies(_ script: RequiredScript, text: String) -> Bool {
+        switch script {
+        case .japanese(let minimumRatio):
+            var letters = 0
+            var japanese = 0
+            for scalar in text.unicodeScalars where CharacterSet.letters.contains(scalar) {
+                letters += 1
+                switch scalar.value {
+                case 0x3040...0x30FF, 0x3400...0x4DBF, 0x4E00...0x9FFF, 0xFF66...0xFF9F:
+                    japanese += 1
+                default:
+                    break
+                }
+            }
+            guard letters > 0 else { return false }
+            return Double(japanese) / Double(letters) >= minimumRatio
+        }
     }
 
     static func numericTokens(in text: String) -> Set<String> {
