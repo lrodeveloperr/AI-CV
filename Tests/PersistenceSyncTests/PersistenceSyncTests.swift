@@ -229,3 +229,11 @@ private func richWorkspace() throws -> Workspace {
     #expect(diagnostics.recordCounts["employment"] == 1)
     #expect(diagnostics.revision == 2)
 }
+
+@Test func cloudKitContainerIDFollowsBundleIdentifierConvention() throws {
+    #expect(PersistenceContainerFactory.cloudKitContainerID == "iCloud.com.worksbienstudios.rirekishoai")
+    let root = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+    let map = try String(contentsOf: root.appendingPathComponent(".github/testflight-app-map.json"), encoding: .utf8)
+    #expect(map.contains("\"bundle_id\": \"\(PersistenceContainerFactory.bundleIdentifier)\""))
+}

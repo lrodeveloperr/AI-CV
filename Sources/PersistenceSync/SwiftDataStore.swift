@@ -45,6 +45,19 @@ public enum PersistenceMigrationPlan: SchemaMigrationPlan {
 }
 
 public enum PersistenceContainerFactory {
+    public static let bundleIdentifier = "com.worksbienstudios.rirekishoai"
+
+    /// Private CloudKit container, named by Apple's `iCloud.<bundle id>`
+    /// convention. The name is permanent once created in the developer
+    /// portal; confirm it exists (and is in the app's entitlements) before
+    /// the first build that enables sync.
+    public static let cloudKitContainerID = "iCloud.\(bundleIdentifier)"
+
+    /// The store the shipped app opens: private CloudKit sync enabled.
+    public static func makeSyncedContainer() throws -> ModelContainer {
+        try makeContainer(cloudKitContainerID: cloudKitContainerID)
+    }
+
     /// - Parameter cloudKitContainerID: the private CloudKit container, e.g.
     ///   "iCloud.com.example.app". Nil keeps the store local-only.
     public static func makeContainer(

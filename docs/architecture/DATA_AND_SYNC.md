@@ -14,6 +14,7 @@ Do not build a custom server, account, sync protocol, or manual “sync now” b
 - Define a `SchemaMigrationPlan` from the first release.
 - Configure `ModelContainer` with a named private CloudKit database identifier.
 - Enable iCloud/CloudKit entitlements for every shipped target.
+- The private container is `iCloud.com.worksbienstudios.rirekishoai` (`PersistenceContainerFactory.cloudKitContainerID`). It follows Apple's naming convention and is **unconfirmed** until created in the developer portal; identifiers there are permanent.
 - Use separate development and production CloudKit environments.
 - Promote and verify the production schema before App Store submission.
 
