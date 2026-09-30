@@ -41,3 +41,19 @@ jobs:
       - name: Build and test engine
         run: swift test --parallel -Xswiftc -warnings-as-errors
 
+
+  ios-compile:
+    name: iOS simulator compile
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build engine for iOS Simulator
+        run: |
+          xcodebuild build \
+            -scheme AICVEngine \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
